@@ -33,6 +33,7 @@ export interface Product {
   warrantyDays: number;
   status: 'available' | 'out_of_stock';
   brand?: string;
+  shopId?: string;
 }
 
 export enum RepairStatus {

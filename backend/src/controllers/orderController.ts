@@ -37,6 +37,7 @@ export const createOrder = catchAsync(async (req: any, res: Response, next: Next
   // Initialize Chapa Payment
   let paymentUrl = '';
   if (paymentMethod === 'chapa') {
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     const paymentInfo = await initializePayment(
       totalPrice,
       'ETB',
@@ -44,8 +45,8 @@ export const createOrder = catchAsync(async (req: any, res: Response, next: Next
       req.user.name.split(' ')[0],
       req.user.name.split(' ')[1] || 'User',
       tx_ref,
-      `https://your-frontend.com/payment-success`, // Replace with actual frontend URL
-      `https://your-frontend.com/payment-success`
+      `${frontendUrl}/payment-success`,
+      `${frontendUrl}/payment-success`
     );
     paymentUrl = paymentInfo.data.checkout_url;
   }

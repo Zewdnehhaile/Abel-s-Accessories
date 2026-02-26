@@ -63,7 +63,8 @@ const mapApiToUi = (p: ApiProduct): Product => {
     image: p.imageUrl || '',
     warrantyDays: condition === 'new' ? 365 : 90,
     status: (p.stock ?? 0) > 0 ? 'available' : 'out_of_stock',
-    brand: p.brand || ''
+    brand: p.brand || '',
+    shopId: p.shopId
   };
 };
 

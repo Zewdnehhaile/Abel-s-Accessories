@@ -59,7 +59,7 @@ export const createRepairRequest = async (payload: {
   phone: string;
   device: string;
   description: string;
-  payment: 'chapa' | 'cash';
+  payment: 'telebirr' | 'cbe' | 'chapa' | 'cash';
 }) => {
   const res = await fetch(`${API_BASE}/api/repairs`, {
     method: 'POST',
@@ -70,6 +70,7 @@ export const createRepairRequest = async (payload: {
       deviceModel: payload.device,
       issueDescription: payload.description,
       paymentStatus: payload.payment === 'cash' ? 'cash' : 'pending',
+      payment: payload.payment,
       serviceType: 'general',
       estimatedCost: 0
     })

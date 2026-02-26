@@ -3,6 +3,23 @@ import { RepairStatus, RepairRequest } from '../types';
 import { Search, CheckCircle, AlertCircle, Wrench, Battery, Droplets, Cpu } from 'lucide-react';
 import { createRepairRequest, trackRepair } from '../services/repairService';
 
+type PaymentMethod = 'telebirr' | 'cbe' | 'chapa' | 'cash';
+
+const PaymentBadge: React.FC<{ method: PaymentMethod }> = ({ method }) => {
+  const styles: Record<PaymentMethod, { label: string; bg: string; text: string }> = {
+    telebirr: { label: 'TB', bg: 'from-emerald-500 to-green-600', text: 'text-white' },
+    cbe: { label: 'CBE', bg: 'from-blue-500 to-indigo-600', text: 'text-white' },
+    chapa: { label: 'CH', bg: 'from-amber-500 to-orange-500', text: 'text-white' },
+    cash: { label: '$', bg: 'from-slate-500 to-slate-700', text: 'text-white' }
+  };
+  const style = styles[method];
+  return (
+    <span className={`inline-flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br ${style.bg} ${style.text} text-[10px] font-black`}>
+      {style.label}
+    </span>
+  );
+};
+
 const Repair: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'request' | 'track'>('request');
   const [trackingId, setTrackingId] = useState('');
@@ -16,7 +33,7 @@ const Repair: React.FC = () => {
     phone: '',
     device: '',
     description: '',
-    payment: 'chapa'
+    payment: 'telebirr'
   });
   const [submittedCode, setSubmittedCode] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -52,10 +69,10 @@ const Repair: React.FC = () => {
         phone: formData.phone,
         device: formData.device,
         description: formData.description,
-        payment: formData.payment as 'chapa' | 'cash'
+        payment: formData.payment as 'telebirr' | 'cbe' | 'chapa' | 'cash'
       });
       setSubmittedCode(result.trackingCode);
-      setFormData({ name: '', phone: '', device: '', description: '', payment: 'chapa' });
+      setFormData({ name: '', phone: '', device: '', description: '', payment: 'telebirr' });
     } catch (err: any) {
       setSubmitError(err?.message || 'Failed to submit request.');
     } finally {
@@ -187,13 +204,36 @@ const Repair: React.FC = () => {
                           <div>
                               <label className="block text-sm font-semibold mb-3 text-[var(--text-main)]">Preferred Payment</label>
                               <div className="grid grid-cols-2 gap-4">
+                                  <label className={`cursor-pointer border rounded-xl p-4 flex items-center gap-3 transition-all ${formData.payment === 'telebirr' ? 'border-[var(--primary)] bg-[var(--primary)]/5' : 'border-[var(--border)] hover:bg-[var(--bg-body)]'}`}>
+                                      <input type="radio" name="payment" value="telebirr" checked={formData.payment === 'telebirr'} onChange={() => setFormData({...formData, payment: 'telebirr'})} className="hidden" />
+                                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${formData.payment === 'telebirr' ? 'border-[var(--primary)]' : 'border-[var(--text-muted)]'}`}>
+                                          {formData.payment === 'telebirr' && <div className="w-2.5 h-2.5 rounded-full bg-[var(--primary)]" />}
+                                      </div>
+                                      <PaymentBadge method="telebirr" />
+                                      <div>
+                                        <span className="block text-sm font-bold text-[var(--text-main)]">Telebirr (Test)</span>
+                                        <span className="block text-xs text-[var(--text-muted)]">Mobile money checkout</span>
+                                      </div>
+                                  </label>
+                                  <label className={`cursor-pointer border rounded-xl p-4 flex items-center gap-3 transition-all ${formData.payment === 'cbe' ? 'border-[var(--primary)] bg-[var(--primary)]/5' : 'border-[var(--border)] hover:bg-[var(--bg-body)]'}`}>
+                                      <input type="radio" name="payment" value="cbe" checked={formData.payment === 'cbe'} onChange={() => setFormData({...formData, payment: 'cbe'})} className="hidden" />
+                                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${formData.payment === 'cbe' ? 'border-[var(--primary)]' : 'border-[var(--text-muted)]'}`}>
+                                          {formData.payment === 'cbe' && <div className="w-2.5 h-2.5 rounded-full bg-[var(--primary)]" />}
+                                      </div>
+                                      <PaymentBadge method="cbe" />
+                                      <div>
+                                        <span className="block text-sm font-bold text-[var(--text-main)]">CBE (Test)</span>
+                                        <span className="block text-xs text-[var(--text-muted)]">Bank transfer checkout</span>
+                                      </div>
+                                  </label>
                                   <label className={`cursor-pointer border rounded-xl p-4 flex items-center gap-3 transition-all ${formData.payment === 'chapa' ? 'border-[var(--primary)] bg-[var(--primary)]/5' : 'border-[var(--border)] hover:bg-[var(--bg-body)]'}`}>
                                       <input type="radio" name="payment" value="chapa" checked={formData.payment === 'chapa'} onChange={() => setFormData({...formData, payment: 'chapa'})} className="hidden" />
                                       <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${formData.payment === 'chapa' ? 'border-[var(--primary)]' : 'border-[var(--text-muted)]'}`}>
                                           {formData.payment === 'chapa' && <div className="w-2.5 h-2.5 rounded-full bg-[var(--primary)]" />}
                                       </div>
+                                      <PaymentBadge method="chapa" />
                                       <div>
-                                        <span className="block text-sm font-bold text-[var(--text-main)]">Online (Chapa)</span>
+                                        <span className="block text-sm font-bold text-[var(--text-main)]">Chapa (Test)</span>
                                         <span className="block text-xs text-[var(--text-muted)]">Secure digital payment</span>
                                       </div>
                                   </label>
@@ -202,6 +242,7 @@ const Repair: React.FC = () => {
                                       <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${formData.payment === 'cash' ? 'border-[var(--primary)]' : 'border-[var(--text-muted)]'}`}>
                                           {formData.payment === 'cash' && <div className="w-2.5 h-2.5 rounded-full bg-[var(--primary)]" />}
                                       </div>
+                                      <PaymentBadge method="cash" />
                                       <div>
                                         <span className="block text-sm font-bold text-[var(--text-main)]">Cash</span>
                                         <span className="block text-xs text-[var(--text-muted)]">Pay at shop</span>

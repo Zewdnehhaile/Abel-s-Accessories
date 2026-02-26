@@ -21,7 +21,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate, lang }) => {
       </div>
 
       {/* Hero Section */}
-      <section className="text-center py-24 md:py-36 px-6 max-w-[1300px] mx-auto relative z-10">
+      <section className="text-center pt-20 pb-12 md:pt-28 md:pb-16 px-6 max-w-[1300px] mx-auto relative z-10">
         <div className="animate-fade-in-up">
             <h1 className="text-5xl md:text-8xl font-black mb-6 tracking-tighter leading-[0.95] text-transparent bg-clip-text bg-gradient-to-br from-[var(--text-main)] to-[var(--text-muted)]">
               {t.heroTitle}
@@ -48,7 +48,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate, lang }) => {
       </section>
 
       {/* Meet Abel Section (Instant Trust) */}
-      <section className="max-w-[1300px] mx-auto px-[5%] py-24 relative z-10 w-full">
+      <section className="max-w-[1300px] mx-auto px-[5%] pt-12 pb-20 relative z-10 w-full">
          <div className="card bg-gradient-to-br from-slate-900 to-[var(--bg-card)] border-white/5 p-0 overflow-hidden rounded-[4rem] shadow-2xl flex flex-col md:flex-row items-center gap-0">
             <div className="w-full md:w-2/5 h-[400px] md:h-[600px] relative bg-slate-900">
                <img 
@@ -78,7 +78,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate, lang }) => {
       </section>
 
       {/* Main Features Grid */}
-      <section className="max-w-[1300px] mx-auto px-[5%] py-20 relative z-10 w-full">
+      <section className="max-w-[1300px] mx-auto px-[5%] pt-0 pb-20 relative z-20 w-full -mt-16 md:-mt-28">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           
           {/* Card 1: Certified Pre-Owned */}

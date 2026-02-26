@@ -11,6 +11,7 @@ import {
   CreateProductInput
 } from '../../services/productService';
 import { fetchRepairs, updateRepairStatus as updateRepairStatusApi } from '../../services/repairService';
+import { fetchProfile, updateProfile } from '../../services/userService';
 
 const PRODUCT_NAME_OPTIONS = [
   'iPhone 15 Pro Max',
@@ -65,7 +66,7 @@ const AbelDashboard: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [productError, setProductError] = useState('');
-  const [activeView, setActiveView] = useState<'overview' | 'repairs' | 'products'>('overview');
+  const [activeView, setActiveView] = useState<'overview' | 'repairs' | 'products' | 'profile'>('overview');
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Modal State
@@ -88,6 +89,15 @@ const AbelDashboard: React.FC = () => {
   const [imageResults, setImageResults] = useState<string[]>([]);
   const [isImageSearching, setIsImageSearching] = useState(false);
   const [imageSearchError, setImageSearchError] = useState('');
+  const [profileForm, setProfileForm] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileStatus, setProfileStatus] = useState('');
+  const [profileError, setProfileError] = useState('');
 
   useEffect(() => {
     let isMounted = true;
@@ -123,6 +133,27 @@ const AbelDashboard: React.FC = () => {
       })
       .finally(() => {
         if (isMounted) setIsLoadingRepairs(false);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetchProfile()
+      .then(profile => {
+        if (!isMounted) return;
+        setProfileForm({
+          name: profile.name || '',
+          email: profile.email || '',
+          password: '',
+          confirmPassword: ''
+        });
+      })
+      .catch(err => {
+        if (!isMounted) return;
+        setProfileError(err?.message || 'Failed to load profile.');
       });
     return () => {
       isMounted = false;
@@ -279,6 +310,32 @@ const AbelDashboard: React.FC = () => {
     }
   };
 
+  const handleProfileSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setProfileSaving(true);
+    setProfileStatus('');
+    setProfileError('');
+    if (profileForm.password && profileForm.password !== profileForm.confirmPassword) {
+      setProfileError('Passwords do not match.');
+      setProfileSaving(false);
+      return;
+    }
+    try {
+      const updated = await updateProfile({
+        name: profileForm.name,
+        email: profileForm.email,
+        password: profileForm.password || undefined
+      });
+      localStorage.setItem('abel_user', JSON.stringify(updated));
+      setProfileStatus('Profile updated successfully.');
+      setProfileForm(prev => ({ ...prev, password: '', confirmPassword: '' }));
+    } catch (err: any) {
+      setProfileError(err?.message || 'Failed to update profile.');
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
   const totalSalesToday = 12500;
   const pendingRepairsCount = repairs.filter(r =>
     r.repairStatus === RepairStatus.RECEIVED ||
@@ -309,6 +366,12 @@ const AbelDashboard: React.FC = () => {
                 className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeView === 'products' ? 'bg-[var(--primary)] text-white shadow-lg' : 'text-[var(--text-muted)] hover:bg-[var(--bg-body)]'}`}
             >
                 Inventory
+            </button>
+            <button 
+                onClick={() => setActiveView('profile')}
+                className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeView === 'profile' ? 'bg-[var(--primary)] text-white shadow-lg' : 'text-[var(--text-muted)] hover:bg-[var(--bg-body)]'}`}
+            >
+                Profile
             </button>
         </div>
       </div>
@@ -524,6 +587,69 @@ const AbelDashboard: React.FC = () => {
                           </tbody>
                       </table>
                   </div>
+              </div>
+          </div>
+      )}
+
+      {activeView === 'profile' && (
+          <div className="max-w-3xl">
+              <div className="card p-8 border-[var(--border)] bg-[var(--bg-card)]">
+                  <h3 className="text-2xl font-black text-[var(--text-main)] mb-6">Profile Settings</h3>
+                  {profileStatus && (
+                    <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 p-3 rounded-lg mb-4 text-sm">
+                      {profileStatus}
+                    </div>
+                  )}
+                  {profileError && (
+                    <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-3 rounded-lg mb-4 text-sm">
+                      {profileError}
+                    </div>
+                  )}
+                  <form onSubmit={handleProfileSave} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                          <label className="block text-xs font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">Full Name</label>
+                          <input
+                              type="text"
+                              className="form-control h-12 font-bold"
+                              value={profileForm.name}
+                              onChange={e => setProfileForm(prev => ({ ...prev, name: e.target.value }))}
+                          />
+                      </div>
+                      <div>
+                          <label className="block text-xs font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">Email</label>
+                          <input
+                              type="email"
+                              className="form-control h-12 font-bold"
+                              value={profileForm.email}
+                              onChange={e => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
+                          />
+                      </div>
+                      <div>
+                          <label className="block text-xs font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">New Password</label>
+                          <input
+                              type="password"
+                              className="form-control h-12 font-bold"
+                              value={profileForm.password}
+                              onChange={e => setProfileForm(prev => ({ ...prev, password: e.target.value }))}
+                              placeholder="Leave blank to keep current"
+                          />
+                      </div>
+                      <div>
+                          <label className="block text-xs font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">Confirm Password</label>
+                          <input
+                              type="password"
+                              className="form-control h-12 font-bold"
+                              value={profileForm.confirmPassword}
+                              onChange={e => setProfileForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                              placeholder="Confirm new password"
+                          />
+                      </div>
+                      <div className="md:col-span-2 flex justify-end">
+                          <button type="submit" disabled={profileSaving} className="btn btn-primary px-6">
+                            {profileSaving ? 'Saving...' : 'Update Profile'}
+                          </button>
+                      </div>
+                  </form>
               </div>
           </div>
       )}

@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, X, MessageCircle, Bot } from 'lucide-react';
-import { sendMessageToGemini } from '../services/aiService';
+import { sendMessageToGemini, type ChatMessage as AiChatMessage } from '../services/aiService';
+import { fetchProducts } from '../services/productService';
+import { Product } from '../types';
 
 interface Message {
   id: string;
@@ -15,13 +17,59 @@ const ChatWidget: React.FC<{ isOnline: boolean }> = ({ isOnline }) => {
     { id: '1', text: 'Hello! I am AB, Abel\'s AI assistant. How can I help you today?', sender: 'bot' }
   ]);
   const [isTyping, setIsTyping] = useState(false);
+  const [catalogContext, setCatalogContext] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const buildCatalogSummary = (products: Product[]) => {
+    if (!products.length) return '';
+    const limit = 30;
+    const lines = products.slice(0, limit).map(p => {
+      const discount = p.discountPercent ? ` (-${p.discountPercent}%)` : '';
+      return `- ${p.name} | ${p.category} | ${p.condition} | ${p.price} ETB${discount} | stock ${p.stock}`;
+    });
+    const header = `Catalog items: ${products.length} (showing ${Math.min(limit, products.length)})`;
+    return `${header}\n${lines.join('\n')}`;
+  };
+
   useEffect(scrollToBottom, [messages]);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('abel_chat_history');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as Message[];
+        if (Array.isArray(parsed) && parsed.length) {
+          setMessages(parsed);
+        }
+      } catch {
+        // ignore
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('abel_chat_history', JSON.stringify(messages.slice(-20)));
+  }, [messages]);
+
+  const refreshCatalog = () => {
+    fetchProducts()
+      .then(products => setCatalogContext(buildCatalogSummary(products)))
+      .catch(() => setCatalogContext(''));
+  };
+
+  useEffect(() => {
+    refreshCatalog();
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      refreshCatalog();
+    }
+  }, [isOpen]);
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -32,7 +80,13 @@ const ChatWidget: React.FC<{ isOnline: boolean }> = ({ isOnline }) => {
     setIsTyping(true);
 
     try {
-      const responseText = await sendMessageToGemini(userMsg.text);
+      const history: AiChatMessage[] = [...messages, userMsg]
+        .slice(-20)
+        .map(msg => ({
+          role: msg.sender === 'user' ? 'user' : 'model',
+          text: msg.text
+        }));
+      const responseText = await sendMessageToGemini(userMsg.text, history, catalogContext);
       const botMsg: Message = { id: (Date.now() + 1).toString(), text: responseText, sender: 'bot' };
       setMessages(prev => [...prev, botMsg]);
     } catch (e) {

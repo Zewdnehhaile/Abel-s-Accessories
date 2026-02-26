@@ -15,6 +15,9 @@ export interface IUser extends Document {
   lastLoginUserAgent?: string;
   lastLoginCountry?: string;
   lastLoginCity?: string;
+  loginCount: number;
+  resetPasswordToken?: string;
+  resetPasswordExpire?: Date;
   createdAt: Date;
   matchPassword: (enteredPassword: string) => Promise<boolean>;
 }
@@ -37,6 +40,9 @@ const UserSchema: Schema = new Schema({
   lastLoginUserAgent: { type: String },
   lastLoginCountry: { type: String },
   lastLoginCity: { type: String },
+  loginCount: { type: Number, default: 0 },
+  resetPasswordToken: { type: String },
+  resetPasswordExpire: { type: Date },
   createdAt: { type: Date, default: Date.now }
 });
 

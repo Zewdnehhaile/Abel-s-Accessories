@@ -13,6 +13,8 @@ import productRoutes from './routes/productRoutes';
 import repairRoutes from './routes/repairRoutes';
 import orderRoutes from './routes/orderRoutes';
 import adminRoutes from './routes/adminRoutes';
+import aiRoutes from './routes/aiRoutes';
+import userRoutes from './routes/userRoutes';
 import User from './models/User';
 import Shop from './models/Shop';
 
@@ -48,6 +50,8 @@ app.use('/api/products', productRoutes);
 app.use('/api/repairs', repairRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/ai', aiRoutes);
+app.use('/api/users', userRoutes);
 
 // Error Handler
 app.use(errorHandler);

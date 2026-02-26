@@ -1,8 +1,8 @@
 
-import React, { useState } from 'react';
-import { login } from '../services/authService';
+import React, { useEffect, useState } from 'react';
+import { login, requestPasswordReset, resetPassword } from '../services/authService';
 import { User } from '../types';
-import { Lock, Mail, Loader, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { Lock, Mail, Loader, ArrowLeft, Eye, EyeOff, X } from 'lucide-react';
 
 interface LoginProps {
   onLogin: (user: User) => void;
@@ -15,6 +15,16 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBack }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isResetOpen, setIsResetOpen] = useState(false);
+  const [resetStep, setResetStep] = useState<'request' | 'reset'>('request');
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetToken, setResetToken] = useState('');
+  const [resetTokenLocked, setResetTokenLocked] = useState(false);
+  const [resetNewPassword, setResetNewPassword] = useState('');
+  const [resetConfirmPassword, setResetConfirmPassword] = useState('');
+  const [resetStatus, setResetStatus] = useState('');
+  const [resetError, setResetError] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,6 +39,79 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBack }) => {
       setError('Invalid credentials.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('resetToken');
+    if (token) {
+      setIsResetOpen(true);
+      setResetStep('reset');
+      setResetToken(token);
+      setResetTokenLocked(true);
+      setResetStatus('Enter a new password to complete the reset.');
+      params.delete('resetToken');
+      const newUrl = `${window.location.pathname}`;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  }, []);
+
+  const openResetModal = () => {
+    setIsResetOpen(true);
+    setResetStep('request');
+    setResetEmail(email);
+    setResetToken('');
+    setResetTokenLocked(false);
+    setResetNewPassword('');
+    setResetConfirmPassword('');
+    setResetStatus('');
+    setResetError('');
+  };
+
+  const handleRequestReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetLoading(true);
+    setResetError('');
+    setResetStatus('');
+    try {
+      const data = await requestPasswordReset(resetEmail);
+      setResetStatus(data.message || 'Password reset email sent. Check your inbox.');
+    } catch (err: any) {
+      setResetError(err?.message || 'Failed to request password reset.');
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetLoading(true);
+    setResetError('');
+    setResetStatus('');
+    if (!resetToken.trim()) {
+      setResetError('Reset token is required.');
+      setResetLoading(false);
+      return;
+    }
+    if (!resetNewPassword.trim()) {
+      setResetError('New password is required.');
+      setResetLoading(false);
+      return;
+    }
+    if (resetNewPassword !== resetConfirmPassword) {
+      setResetError('Passwords do not match.');
+      setResetLoading(false);
+      return;
+    }
+    try {
+      const data = await resetPassword(resetToken.trim(), resetNewPassword);
+      setResetStatus(data.message || 'Password reset successful. You can sign in now.');
+      setResetStep('request');
+    } catch (err: any) {
+      setResetError(err?.message || 'Failed to reset password.');
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -105,7 +188,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBack }) => {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-[var(--bg-body)] border border-[var(--border)] rounded-xl pl-10 pr-12 py-3.5 text-black focus:outline-none focus:border-[var(--primary)] transition-all placeholder:text-[var(--text-muted)]"
+                className="w-full bg-[var(--bg-body)] border border-[var(--border)] rounded-xl pl-10 pr-12 py-3.5 text-[var(--text-main)] focus:outline-none focus:border-[var(--primary)] transition-all placeholder:text-[var(--text-muted)]"
                 placeholder="••••••••"
               />
               <button
@@ -119,6 +202,16 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBack }) => {
             </div>
           </div>
 
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={openResetModal}
+              className="text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--primary)] transition-colors"
+            >
+              Forgot password?
+            </button>
+          </div>
+
           <button 
             type="submit" 
             disabled={loading}
@@ -128,6 +221,112 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBack }) => {
           </button>
         </form>
       </div>
+
+      {isResetOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl shadow-2xl p-6 md:p-8">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-[var(--text-main)]">Reset Password</h3>
+              <button onClick={() => setIsResetOpen(false)} className="text-[var(--text-muted)] hover:text-[var(--text-main)]">
+                <X size={18} />
+              </button>
+            </div>
+
+            {resetStatus && (
+              <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm rounded-lg p-3 mb-4">
+                {resetStatus}
+              </div>
+            )}
+            {resetError && (
+              <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-sm rounded-lg p-3 mb-4">
+                {resetError}
+              </div>
+            )}
+
+            {resetStep === 'request' ? (
+              <form onSubmit={handleRequestReset} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">Email Address</label>
+                  <input
+                    type="email"
+                    required
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    className="w-full bg-[var(--bg-body)] border border-[var(--border)] rounded-xl px-4 py-3 text-[var(--text-main)] focus:outline-none focus:border-[var(--primary)]"
+                    placeholder="you@example.com"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={resetLoading}
+                  className="w-full btn btn-primary py-3"
+                >
+                  {resetLoading ? 'Sending...' : 'Send Reset Email'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setResetStep('reset')}
+                  className="w-full btn btn-outline py-3"
+                >
+                  I already have a reset token
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleResetPassword} className="space-y-4">
+                {!resetTokenLocked && (
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">Reset Token</label>
+                    <input
+                      type="text"
+                      required
+                      value={resetToken}
+                      onChange={(e) => setResetToken(e.target.value)}
+                      className="w-full bg-[var(--bg-body)] border border-[var(--border)] rounded-xl px-4 py-3 text-[var(--text-main)] focus:outline-none focus:border-[var(--primary)]"
+                      placeholder="Paste token here"
+                    />
+                  </div>
+                )}
+                <div>
+                  <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">New Password</label>
+                  <input
+                    type="password"
+                    required
+                    value={resetNewPassword}
+                    onChange={(e) => setResetNewPassword(e.target.value)}
+                    className="w-full bg-[var(--bg-body)] border border-[var(--border)] rounded-xl px-4 py-3 text-[var(--text-main)] focus:outline-none focus:border-[var(--primary)]"
+                    placeholder="New password"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">Confirm Password</label>
+                  <input
+                    type="password"
+                    required
+                    value={resetConfirmPassword}
+                    onChange={(e) => setResetConfirmPassword(e.target.value)}
+                    className="w-full bg-[var(--bg-body)] border border-[var(--border)] rounded-xl px-4 py-3 text-[var(--text-main)] focus:outline-none focus:border-[var(--primary)]"
+                    placeholder="Confirm password"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={resetLoading}
+                  className="w-full btn btn-primary py-3"
+                >
+                  {resetLoading ? 'Resetting...' : 'Reset Password'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setResetStep('request')}
+                  className="w-full btn btn-outline py-3"
+                >
+                  Back
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

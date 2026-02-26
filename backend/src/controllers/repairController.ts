@@ -4,8 +4,18 @@ import Shop from '../models/Shop';
 import { AppError } from '../utils/AppError';
 import { catchAsync } from '../utils/catchAsync';
 
-const generateTrackingCode = () => {
-  return 'R-' + Math.floor(1000 + Math.random() * 9000);
+const generateTrackingCode = async () => {
+  let code = '';
+  let exists = true;
+  let attempts = 0;
+  while (exists && attempts < 10) {
+    code = 'R-' + Math.floor(1000 + Math.random() * 9000);
+    // eslint-disable-next-line no-await-in-loop
+    const found = await Repair.findOne({ trackingCode: code });
+    exists = !!found;
+    attempts += 1;
+  }
+  return code || `R-${Date.now()}`;
 };
 
 export const getRepairs = catchAsync(async (req: any, res: Response, next: NextFunction) => {
@@ -29,7 +39,7 @@ export const createRepair = catchAsync(async (req: any, res: Response, next: Nex
   const isAuthed = !!req.user;
   const payload = { ...req.body };
 
-  payload.trackingCode = generateTrackingCode();
+  payload.trackingCode = await generateTrackingCode();
 
   if (isAuthed && req.user.role !== 'super_admin') {
     payload.shopId = req.user.shopId;

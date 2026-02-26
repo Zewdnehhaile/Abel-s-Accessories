@@ -3,8 +3,10 @@ import User from '../models/User';
 import { AppError } from '../utils/AppError';
 import { catchAsync } from '../utils/catchAsync';
 import jwt, { type SignOptions, type Secret } from 'jsonwebtoken';
+import crypto from 'crypto';
 import ActivityLog from '../models/ActivityLog';
 import { lookupGeo } from '../services/geoService';
+import { sendEmail } from '../services/emailService';
 
 const signToken = (id: string) => {
   const secret = process.env.JWT_SECRET as Secret | undefined;
@@ -185,6 +187,7 @@ export const login = catchAsync(async (req: Request, res: Response, next: NextFu
 
   user.failedLoginAttempts = 0;
   user.lockUntil = undefined;
+  user.loginCount = (user.loginCount || 0) + 1;
   user.lastLoginAt = new Date();
   user.lastLoginIP = ipAddress;
   user.lastLoginUserAgent = userAgent;
@@ -228,6 +231,100 @@ export const login = catchAsync(async (req: Request, res: Response, next: NextFu
       role: user.role,
       shopId: user.shopId
     }
+  });
+});
+
+export const forgotPassword = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const { email } = req.body as { email?: string };
+  if (!email) {
+    return next(new AppError('Email is required', 400));
+  }
+
+  const user = await User.findOne({ email });
+  if (!user) {
+    return next(new AppError('User not found', 404));
+  }
+
+  const resetToken = crypto.randomBytes(20).toString('hex');
+  const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+  user.resetPasswordToken = hashedToken;
+  user.resetPasswordExpire = new Date(Date.now() + 30 * 60 * 1000);
+  await user.save();
+
+  await ActivityLog.create({
+    userId: user._id,
+    userEmail: user.email,
+    action: 'password_reset_requested',
+    description: 'User requested password reset',
+    type: 'security'
+  });
+
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+  const resetUrl = `${frontendUrl}/?resetToken=${resetToken}`;
+
+  try {
+    await sendEmail({
+      to: user.email,
+      subject: 'Reset your Abel Accessories password',
+      text: `Reset your password using this link: ${resetUrl}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+          <h2>Password Reset Request</h2>
+          <p>Hello ${user.name || 'there'},</p>
+          <p>We received a request to reset your password for Abel Accessories Sales.</p>
+          <p><a href="${resetUrl}" style="display:inline-block;padding:10px 18px;background:#4f46e5;color:#fff;text-decoration:none;border-radius:6px;">Reset Password</a></p>
+          <p>If the button doesn’t work, copy and paste this link in your browser:</p>
+          <p>${resetUrl}</p>
+          <p>This link will expire in 30 minutes.</p>
+          <p>If you did not request this, you can ignore this email.</p>
+        </div>
+      `
+    });
+  } catch (err) {
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+    await user.save();
+    return next(new AppError('Email could not be sent. Please try again later.', 500));
+  }
+
+  res.status(200).json({
+    success: true,
+    message: 'Password reset email sent. Please check your inbox.'
+  });
+});
+
+export const resetPassword = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const { token, password } = req.body as { token?: string; password?: string };
+  if (!token || !password) {
+    return next(new AppError('Token and new password are required', 400));
+  }
+
+  const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+  const user = await User.findOne({
+    resetPasswordToken: hashedToken,
+    resetPasswordExpire: { $gt: new Date() }
+  });
+
+  if (!user) {
+    return next(new AppError('Invalid or expired reset token', 400));
+  }
+
+  user.password = password;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpire = undefined;
+  await user.save();
+
+  await ActivityLog.create({
+    userId: user._id,
+    userEmail: user.email,
+    action: 'password_reset_completed',
+    description: 'User reset password successfully',
+    type: 'security'
+  });
+
+  res.status(200).json({
+    success: true,
+    message: 'Password reset successful'
   });
 });
 

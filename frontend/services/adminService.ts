@@ -15,6 +15,7 @@ type ApiUser = {
   email: string;
   role: User['role'];
   isActive: boolean;
+  shopId?: string;
   createdAt: string;
 };
 
@@ -65,9 +66,66 @@ export const fetchUsers = async () => {
     name: u.name,
     email: u.email,
     role: u.role,
-    shopId: undefined,
+    shopId: u.shopId,
     isActive: u.isActive
   })) as User[];
+};
+
+export const createUser = async (payload: {
+  name: string;
+  email: string;
+  password: string;
+  role: User['role'];
+  shopId?: string;
+}) => {
+  const res = await fetch(`${API_BASE}/api/admin/users`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders()
+    },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) {
+    await parseError(res);
+  }
+  const data = (await res.json()) as ApiResponse<ApiUser>;
+  return data.data;
+};
+
+export const updateUser = async (id: string, payload: Partial<{
+  name: string;
+  email: string;
+  password: string;
+  role: User['role'];
+  isActive: boolean;
+  shopId?: string;
+}>) => {
+  const res = await fetch(`${API_BASE}/api/admin/users/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders()
+    },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) {
+    await parseError(res);
+  }
+  const data = (await res.json()) as ApiResponse<ApiUser>;
+  return data.data;
+};
+
+export const deleteUser = async (id: string) => {
+  const res = await fetch(`${API_BASE}/api/admin/users/${id}`, {
+    method: 'DELETE',
+    headers: {
+      ...getAuthHeaders()
+    }
+  });
+  if (!res.ok) {
+    await parseError(res);
+  }
 };
 
 export const toggleUserActive = async (id: string) => {
@@ -82,8 +140,9 @@ export const toggleUserActive = async (id: string) => {
   return data.data;
 };
 
-export const fetchLogs = async () => {
-  const res = await fetch(`${API_BASE}/api/admin/logs`, {
+export const fetchLogs = async (userId?: string) => {
+  const query = userId ? `?userId=${encodeURIComponent(userId)}` : '';
+  const res = await fetch(`${API_BASE}/api/admin/logs${query}`, {
     headers: { ...getAuthHeaders() }
   });
   if (!res.ok) {
@@ -116,4 +175,15 @@ export const fetchSalesStats = async () => {
   }
   const data = (await res.json()) as ApiResponse<SalesStat[]>;
   return data.data || [];
+};
+
+export const fetchUsageStats = async () => {
+  const res = await fetch(`${API_BASE}/api/admin/usage`, {
+    headers: { ...getAuthHeaders() }
+  });
+  if (!res.ok) {
+    await parseError(res);
+  }
+  const data = (await res.json()) as ApiResponse<{ totalUsers: number; activeUsers: number; totalLogins: number }>;
+  return data.data;
 };
