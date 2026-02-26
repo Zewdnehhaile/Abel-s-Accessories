@@ -1,0 +1,356 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { Product } from '../types';
+import { I18N } from '../constants';
+import { Search, ShoppingCart, Filter, ChevronDown, ImageOff } from 'lucide-react';
+import { ShopCategory } from '../App';
+import { fetchProducts, getDiscountedPrice } from '../services/productService';
+
+interface ShopProps {
+  addToCart: (product: Product) => void;
+  lang: 'en' | 'am';
+  categoryFilter: ShopCategory;
+}
+
+const Shop: React.FC<ShopProps> = ({ addToCart, lang, categoryFilter }) => {
+  const t = I18N[lang];
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeType, setActiveType] = useState<string>('all');
+  const [conditionFilter, setConditionFilter] = useState<'all' | 'new' | 'used'>('all');
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    let isMounted = true;
+    setIsLoading(true);
+    setLoadError('');
+    fetchProducts()
+      .then(data => {
+        if (isMounted) setProducts(data);
+      })
+      .catch(err => {
+        if (isMounted) setLoadError(err?.message || 'Failed to load products.');
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    setActiveType('all');
+    setConditionFilter('all');
+  }, [categoryFilter]);
+
+  // Stable random selection of phones to show in the Accessories "All" view
+  // We pick these once per mount to prevent jitter during search/filter updates
+  const randomFeaturedPhones = useMemo(() => {
+    return products
+      .filter(p => p.category === 'Phone')
+      .sort(() => 0.5 - Math.random())
+      .slice(0, 4);
+  }, [products]);
+
+  const filteredProducts = useMemo(() => {
+    // 1. Base criteria that apply to everything (Search & Condition)
+    const baseFiltered = products.filter(p => {
+      const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCondition = conditionFilter === 'all' || p.condition === conditionFilter;
+      return matchesSearch && matchesCondition;
+    });
+
+    if (categoryFilter === 'phones') {
+      // Logic for Phones page
+      let result = baseFiltered.filter(p => p.category === 'Phone');
+      
+      if (activeType !== 'all') {
+        if (activeType === 'brick') {
+          result = result.filter(p => 
+            p.description.toLowerCase().includes('brick') || 
+            p.description.toLowerCase().includes('feature phone') ||
+            p.name.toLowerCase().includes('nokia 105') ||
+            p.name.toLowerCase().includes('tecno t301')
+          );
+        } else {
+          result = result.filter(p => p.name.toLowerCase().includes(activeType.toLowerCase()));
+        }
+      }
+      return result;
+    } else {
+      // Logic for Accessories page
+      if (activeType === 'all') {
+        // Show all accessories
+        const accessories = baseFiltered.filter(p => p.category !== 'Phone');
+        
+        // Also show a subset of phones (randomized per session)
+        // We re-filter the random selection to ensure they match search/condition
+        const phonesToShow = randomFeaturedPhones.filter(p => {
+            const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesCondition = conditionFilter === 'all' || p.condition === conditionFilter;
+            return matchesSearch && matchesCondition;
+        });
+
+        // Mix them together (phones at the end or interspersed)
+        return [...accessories, ...phonesToShow];
+      } else if (activeType === 'phone') {
+        return baseFiltered.filter(p => p.category === 'Phone');
+      } else {
+        return baseFiltered.filter(p => p.category.toLowerCase() === activeType.toLowerCase());
+      }
+    }
+  }, [searchTerm, activeType, conditionFilter, categoryFilter, randomFeaturedPhones, products]);
+
+  const discountedProducts = useMemo(
+    () => filteredProducts.filter(p => (p.discountPercent ?? 0) > 0),
+    [filteredProducts]
+  );
+  const regularProducts = useMemo(
+    () => filteredProducts.filter(p => !p.discountPercent || p.discountPercent <= 0),
+    [filteredProducts]
+  );
+
+  const renderFilters = () => {
+    if (categoryFilter === 'phones') {
+      const phoneTypes = [
+        { id: 'all', label: 'All Brands' },
+        { id: 'iphone', label: 'iPhone' },
+        { id: 'samsung', label: 'Samsung' },
+        { id: 'pixel', label: 'Google Pixel' },
+        { id: 'tecno', label: 'Tecno' },
+        { id: 'infinix', label: 'Infinix' },
+        { id: 'redmi', label: 'Redmi' },
+        { id: 'itel', label: 'Itel' },
+        { id: 'oppo', label: 'Oppo' },
+        { id: 'brick', label: 'Brick Phones' },
+      ];
+      return phoneTypes.map(ft => (
+        <button
+            key={ft.id}
+            onClick={() => setActiveType(ft.id)}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${activeType === ft.id ? 'bg-[var(--primary)] text-white shadow-lg' : 'bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-muted)] hover:text-white hover:border-[var(--primary)]'}`}
+        >
+            {ft.label}
+        </button>
+      ));
+    } else {
+      const accTypes = [
+        { id: 'all', label: 'All Accessories' },
+        { id: 'phone', label: 'Mobile Phones' },
+        { id: 'case', label: 'Cases' },
+        { id: 'charger', label: 'Chargers' },
+        { id: 'audio', label: 'Audio' },
+        { id: 'wearable', label: 'Wearables' },
+      ];
+      return accTypes.map(ft => (
+        <button
+            key={ft.id}
+            onClick={() => setActiveType(ft.id)}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${activeType === ft.id ? 'bg-[var(--primary)] text-white shadow-lg' : 'bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-muted)] hover:text-white hover:border-[var(--primary)]'}`}
+        >
+            {ft.label}
+        </button>
+      ));
+    }
+  };
+
+  return (
+    <div className="py-12 px-[5%] max-w-[1400px] mx-auto animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row justify-between items-end mb-10 gap-6 border-b border-[var(--border)] pb-8">
+        <div>
+            <h2 className="text-4xl font-black text-[var(--text-main)] mb-2 tracking-tight">
+                {categoryFilter === 'phones' ? 'Mobile Phones' : 'Accessories'}
+            </h2>
+            <p className="text-[var(--text-muted)] text-lg">
+                {categoryFilter === 'phones' ? 'Latest smartphones and durable button phones.' : 'Enhance your daily tech.'}
+            </p>
+        </div>
+        <div className="relative w-full md:w-80 group">
+             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] group-focus-within:text-[var(--primary)]" size={20} />
+             <input 
+               type="text" 
+               placeholder={t.searchPlaceholder}
+               value={searchTerm}
+               onChange={(e) => setSearchTerm(e.target.value)}
+               className="form-control pl-10"
+             />
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-4 mb-10 items-center">
+        <div className="flex gap-2 flex-wrap items-center flex-1">
+            <Filter size={16} className="text-[var(--text-muted)]" />
+            {renderFilters()}
+        </div>
+        <div className="relative min-w-[150px]">
+            <select
+                value={conditionFilter}
+                onChange={(e) => setConditionFilter(e.target.value as any)}
+                className="appearance-none bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-main)] py-2 pl-4 pr-10 rounded-full focus:outline-none focus:border-[var(--primary)] cursor-pointer text-sm font-medium w-full"
+            >
+                <option value="all">Any Condition</option>
+                <option value="new">Brand New</option>
+                <option value="used">Used / Refurbished</option>
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] pointer-events-none" size={16} />
+        </div>
+      </div>
+
+      {isLoading && (
+        <div className="text-center py-16 text-[var(--text-muted)]">Loading products...</div>
+      )}
+
+      {!isLoading && loadError && (
+        <div className="text-center py-16 text-red-500">{loadError}</div>
+      )}
+
+      {!isLoading && !loadError && discountedProducts.length > 0 && (
+        <div className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-2xl font-black text-[var(--text-main)] tracking-tight">Discounted Deals</h3>
+            <span className="text-xs font-bold uppercase tracking-widest text-[var(--text-muted)]">
+              Limited Offers
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {discountedProducts.map(product => {
+              const finalPrice = getDiscountedPrice(product);
+              const hasDiscount = (product.discountPercent ?? 0) > 0;
+              return (
+                <div key={`discount-${product.id}`} className="card group flex flex-col justify-between overflow-hidden p-0 border-0 bg-[var(--bg-card)] ring-1 ring-[var(--border)] hover:ring-[var(--primary)] transition-all">
+                  <div className="h-64 relative overflow-hidden bg-[#0F1014] flex items-center justify-center">
+                      {!imageErrors[product.id] ? (
+                        <img 
+                            src={product.image} 
+                            alt={product.name} 
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                            onError={() => setImageErrors(prev => ({...prev, [product.id]: true}))}
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center text-[var(--text-muted)] opacity-50"><ImageOff size={40} /></div>
+                      )}
+                      <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
+                          <span className="backdrop-blur-md bg-black/60 text-white text-[10px] font-bold px-2 py-1 rounded border border-white/10 uppercase">
+                              {product.category}
+                          </span>
+                          {product.condition === 'used' && (
+                              <span className="bg-amber-500 text-black text-[10px] font-bold px-2 py-1 rounded uppercase">Used</span>
+                          )}
+                          {hasDiscount && (
+                              <span className="bg-emerald-500 text-black text-[10px] font-bold px-2 py-1 rounded uppercase">
+                                -{product.discountPercent}%
+                              </span>
+                          )}
+                      </div>
+                  </div>
+
+                  <div className="p-5 flex flex-col flex-1">
+                      <div className="flex-1">
+                          <h3 className="font-bold text-lg mb-1 text-[var(--text-main)] line-clamp-1">{product.name}</h3>
+                          <p className="text-[var(--text-muted)] text-sm line-clamp-2 mb-4">{product.description}</p>
+                      </div>
+                      <div className="flex items-center justify-between mt-auto pt-4 border-t border-[var(--border)]">
+                          <div className="flex flex-col">
+                            <span className="text-lg font-bold text-[var(--text-main)]">{finalPrice.toLocaleString()} ETB</span>
+                            <span className="text-xs text-[var(--text-muted)] line-through">{product.price.toLocaleString()} ETB</span>
+                          </div>
+                          <button 
+                              onClick={() => addToCart(product)}
+                              disabled={product.status === 'out_of_stock'}
+                              className="btn btn-primary btn-sm px-4 group/btn relative overflow-hidden w-32"
+                          >
+                              <span className="flex items-center gap-2 transition-transform duration-300 group-hover/btn:-translate-y-10">
+                                  <ShoppingCart size={16} /> Cart
+                              </span>
+                              <span className="absolute inset-0 flex items-center justify-center gap-2 translate-y-10 transition-transform duration-300 group-hover/btn:translate-y-0 bg-[var(--primary)]">
+                                  <ShoppingCart size={16} /> Add
+                              </span>
+                          </button>
+                      </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {!isLoading && !loadError && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        {regularProducts.map(product => {
+          const finalPrice = getDiscountedPrice(product);
+          const hasDiscount = (product.discountPercent ?? 0) > 0;
+          return (
+          <div key={product.id} className="card group flex flex-col justify-between overflow-hidden p-0 border-0 bg-[var(--bg-card)] ring-1 ring-[var(--border)] hover:ring-[var(--primary)] transition-all">
+            <div className="h-64 relative overflow-hidden bg-[#0F1014] flex items-center justify-center">
+                {!imageErrors[product.id] ? (
+                  <img 
+                      src={product.image} 
+                      alt={product.name} 
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                      onError={() => setImageErrors(prev => ({...prev, [product.id]: true}))}
+                  />
+                ) : (
+                  <div className="flex flex-col items-center text-[var(--text-muted)] opacity-50"><ImageOff size={40} /></div>
+                )}
+                <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
+                    <span className="backdrop-blur-md bg-black/60 text-white text-[10px] font-bold px-2 py-1 rounded border border-white/10 uppercase">
+                        {product.category}
+                    </span>
+                    {product.condition === 'used' && (
+                        <span className="bg-amber-500 text-black text-[10px] font-bold px-2 py-1 rounded uppercase">Used</span>
+                    )}
+                    {hasDiscount && (
+                        <span className="bg-emerald-500 text-black text-[10px] font-bold px-2 py-1 rounded uppercase">
+                          -{product.discountPercent}%
+                        </span>
+                    )}
+                </div>
+            </div>
+
+            <div className="p-5 flex flex-col flex-1">
+                <div className="flex-1">
+                    <h3 className="font-bold text-lg mb-1 text-[var(--text-main)] line-clamp-1">{product.name}</h3>
+                    <p className="text-[var(--text-muted)] text-sm line-clamp-2 mb-4">{product.description}</p>
+                </div>
+                <div className="flex items-center justify-between mt-auto pt-4 border-t border-[var(--border)]">
+                    <div className="flex flex-col">
+                      <span className="text-lg font-bold text-[var(--text-main)]">{finalPrice.toLocaleString()} ETB</span>
+                      {hasDiscount && (
+                        <span className="text-xs text-[var(--text-muted)] line-through">{product.price.toLocaleString()} ETB</span>
+                      )}
+                    </div>
+                    <button 
+                        onClick={() => addToCart(product)}
+                        disabled={product.status === 'out_of_stock'}
+                        className="btn btn-primary btn-sm px-4 group/btn relative overflow-hidden w-32"
+                    >
+                        <span className="flex items-center gap-2 transition-transform duration-300 group-hover/btn:-translate-y-10">
+                            <ShoppingCart size={16} /> Cart
+                        </span>
+                        <span className="absolute inset-0 flex items-center justify-center gap-2 translate-y-10 transition-transform duration-300 group-hover/btn:translate-y-0 bg-[var(--primary)]">
+                            <ShoppingCart size={16} /> Add
+                        </span>
+                    </button>
+                </div>
+            </div>
+          </div>
+          );
+        })}
+      </div>
+      )}
+      
+      {!isLoading && !loadError && filteredProducts.length === 0 && (
+        <div className="text-center py-20 bg-[var(--bg-card)] rounded-[2rem] border border-dashed border-[var(--border)]">
+           <div className="text-[var(--text-muted)] mb-4"><Filter size={48} className="mx-auto opacity-20" /></div>
+           <h3 className="text-xl font-bold text-[var(--text-main)]">No products found</h3>
+           <p className="text-[var(--text-muted)]">Try adjusting your filters or search term.</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Shop;
