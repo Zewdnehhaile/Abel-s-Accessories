@@ -163,10 +163,11 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBack }) => {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">Email Address</label>
+            <label htmlFor="login-email" className="block text-sm font-medium text-[var(--text-muted)] mb-2">Email Address</label>
             <div className="relative group">
               <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--text-muted)] group-focus-within:text-[var(--primary)] transition-colors" size={18} />
               <input 
+                id="login-email"
                 type="email" 
                 required
                 value={email}
@@ -178,12 +179,13 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBack }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">Password</label>
+            <label htmlFor="login-password" className="block text-sm font-medium text-[var(--text-muted)] mb-2">Password</label>
             <div className="relative group">
               <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--text-muted)] group-focus-within:text-[var(--primary)] transition-colors z-10 pointer-events-none">
                  <Lock size={18} />
               </div>
               <input 
+                id="login-password"
                 type={showPassword ? "text" : "password"}
                 required
                 value={password}
@@ -246,8 +248,9 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBack }) => {
             {resetStep === 'request' ? (
               <form onSubmit={handleRequestReset} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">Email Address</label>
+                  <label htmlFor="reset-email" className="block text-sm font-medium text-[var(--text-muted)] mb-2">Email Address</label>
                   <input
+                    id="reset-email"
                     type="email"
                     required
                     value={resetEmail}
@@ -275,8 +278,9 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBack }) => {
               <form onSubmit={handleResetPassword} className="space-y-4">
                 {!resetTokenLocked && (
                   <div>
-                    <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">Reset Token</label>
+                    <label htmlFor="reset-token" className="block text-sm font-medium text-[var(--text-muted)] mb-2">Reset Token</label>
                     <input
+                      id="reset-token"
                       type="text"
                       required
                       value={resetToken}
@@ -287,8 +291,9 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBack }) => {
                   </div>
                 )}
                 <div>
-                  <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">New Password</label>
+                  <label htmlFor="reset-new-password" className="block text-sm font-medium text-[var(--text-muted)] mb-2">New Password</label>
                   <input
+                    id="reset-new-password"
                     type="password"
                     required
                     value={resetNewPassword}
@@ -298,8 +303,9 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBack }) => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">Confirm Password</label>
+                  <label htmlFor="reset-confirm-password" className="block text-sm font-medium text-[var(--text-muted)] mb-2">Confirm Password</label>
                   <input
+                    id="reset-confirm-password"
                     type="password"
                     required
                     value={resetConfirmPassword}

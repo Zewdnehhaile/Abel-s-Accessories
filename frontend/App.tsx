@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Navbar from './components/Navbar';
 import ChatWidget from './components/ChatWidget';
 import Home from './pages/Home';
@@ -6,6 +6,7 @@ import About from './pages/About';
 import Shop from './pages/Shop';
 import Repair from './pages/Repair';
 import Login from './pages/Login';
+import PaymentSuccess from './pages/PaymentSuccess';
 import AbelDashboard from './pages/admin/AbelDashboard';
 import SuperAdminDashboard from './pages/admin/SuperAdminDashboard';
 import { User, UserRole, CartItem, Product } from './types';
@@ -15,21 +16,37 @@ import { createOrder } from './services/orderService';
 import { X, Trash2, Plus, Minus, Loader, Globe, Check } from 'lucide-react';
 import { I18N } from './constants';
 
-export type ViewState = 'home' | 'about' | 'shop' | 'repair' | 'login' | 'admin' | 'super-admin';
+export type ViewState = 'home' | 'about' | 'shop' | 'repair' | 'login' | 'admin' | 'super-admin' | 'payment-success';
 export type ShopCategory = 'all' | 'phones' | 'accessories';
 type PaymentMethod = 'chapa' | 'telebirr' | 'cbe' | 'cash';
 
 const PaymentBadge: React.FC<{ method: PaymentMethod }> = ({ method }) => {
-  const styles: Record<PaymentMethod, { label: string; bg: string }> = {
-    telebirr: { label: 'TB', bg: 'from-emerald-500 to-green-600' },
-    cbe: { label: 'CBE', bg: 'from-blue-500 to-indigo-600' },
-    chapa: { label: 'CH', bg: 'from-amber-500 to-orange-500' },
-    cash: { label: '$', bg: 'from-slate-500 to-slate-700' }
+  const logos: Record<PaymentMethod, string | null> = {
+    telebirr: '/telebirr.svg',
+    cbe: '/cbe.svg',
+    chapa: '/chapa.svg',
+    cash: null
   };
-  const style = styles[method];
+  const fallback: Record<PaymentMethod, string> = {
+    telebirr: 'TB',
+    cbe: 'CBE',
+    chapa: 'CH',
+    cash: '$'
+  };
+  const bg: Record<PaymentMethod, string> = {
+    telebirr: 'from-emerald-500 to-green-600',
+    cbe: 'from-blue-500 to-indigo-600',
+    chapa: 'from-amber-500 to-orange-500',
+    cash: 'from-slate-500 to-slate-700'
+  };
+  const logo = logos[method];
   return (
-    <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-br ${style.bg} text-white text-[9px] font-black`}>
-      {style.label}
+    <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full bg-gradient-to-br ${bg[method]} text-white text-[9px] font-black overflow-hidden`}>
+      {logo ? (
+        <img src={logo} alt={`${method} logo`} className="w-5 h-5" />
+      ) : (
+        fallback[method]
+      )}
     </span>
   );
 };
@@ -45,7 +62,9 @@ const App: React.FC = () => {
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('telebirr');
   const [checkoutError, setCheckoutError] = useState('');
+  const [cartNotice, setCartNotice] = useState('');
   const [legalModal, setLegalModal] = useState<'privacy' | 'terms' | null>(null);
+  const cartNoticeTimer = useRef<number | null>(null);
   
   const [lang, setLang] = useState<'en' | 'am'>('en');
   const t = I18N[lang];
@@ -57,12 +76,41 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const currentPath = window.location.pathname.toLowerCase();
+    if (currentPath.startsWith('/payment-success')) {
+      setCurrentView('payment-success');
+      return;
+    }
     if (params.get('resetToken')) {
       setCurrentView('login');
     }
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (cartNoticeTimer.current !== null) {
+        window.clearTimeout(cartNoticeTimer.current);
+      }
+    };
+  }, []);
+
+  const showCartNotice = (message: string) => {
+    setCartNotice(message);
+    if (cartNoticeTimer.current !== null) {
+      window.clearTimeout(cartNoticeTimer.current);
+    }
+    cartNoticeTimer.current = window.setTimeout(() => setCartNotice(''), 3200);
+  };
+
   const handleNavigate = (view: ViewState, category: ShopCategory = 'all') => {
+    if (view === 'payment-success') {
+      if (window.location.pathname !== '/payment-success') {
+        window.history.replaceState({}, '', '/payment-success');
+      }
+    } else if (window.location.pathname !== '/') {
+      window.history.replaceState({}, '', '/');
+    }
+
     setCurrentView(view);
     if (view === 'shop') {
       setShopCategory(category);
@@ -85,10 +133,23 @@ const App: React.FC = () => {
   };
 
   const addToCart = (product: Product) => {
+    if (product.stock <= 0) {
+      showCartNotice(`${product.name} is out of stock.`);
+      setIsCartOpen(true);
+      return;
+    }
+
     setCart(prev => {
       const exists = prev.find(item => item.id === product.id);
       if (exists) {
-        return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
+        const maxStock = Math.max(0, exists.stock);
+        if (exists.quantity >= maxStock) {
+          showCartNotice(`Only ${maxStock} in stock for ${exists.name}.`);
+          return prev;
+        }
+        return prev.map(item =>
+          item.id === product.id ? { ...item, quantity: Math.min(item.quantity + 1, maxStock) } : item
+        );
       }
       return [...prev, { ...product, quantity: 1 }];
     });
@@ -98,7 +159,12 @@ const App: React.FC = () => {
   const updateQuantity = (id: string, delta: number) => {
     setCart(prev => prev.map(item => {
       if (item.id === id) {
-        const newQty = item.quantity + delta;
+        const maxStock = Math.max(0, item.stock);
+        if (delta > 0 && item.quantity >= maxStock) {
+          showCartNotice(`Only ${maxStock} in stock for ${item.name}.`);
+          return item;
+        }
+        const newQty = delta > 0 ? Math.min(item.quantity + delta, maxStock) : item.quantity + delta;
         return newQty > 0 ? { ...item, quantity: newQty } : item;
       }
       return item;
@@ -114,11 +180,6 @@ const App: React.FC = () => {
     setIsCheckingOut(true);
     setCheckoutError('');
     try {
-      const token = localStorage.getItem('abel_token');
-      if (!token) {
-        setCheckoutError('Please sign in to complete checkout.');
-        return;
-      }
       const shopId = user?.shopId || cart.find(item => item.shopId)?.shopId;
       if (!shopId) {
         setCheckoutError('Shop not found for this order.');
@@ -128,20 +189,23 @@ const App: React.FC = () => {
       const { paymentUrl } = await createOrder({
         products: cart,
         shopId,
-        paymentMethod
+        paymentMethod,
+        customerName: user?.name,
+        customerEmail: user?.email
       });
 
-      if (paymentMethod === 'chapa') {
+      if (paymentMethod !== 'cash') {
         if (paymentUrl) {
           window.location.href = paymentUrl;
           return;
         }
-        setCheckoutError('Unable to initialize Chapa payment. Please try again.');
+        setCheckoutError('Unable to initialize payment. Please try again.');
         return;
       }
 
       setCheckoutSuccess(true);
       setCart([]);
+      setCartNotice('');
       setTimeout(() => setCheckoutSuccess(false), 3000);
     } catch (err: any) {
       setCheckoutError(err?.message || 'Checkout failed. Please try again.');
@@ -172,6 +236,8 @@ const App: React.FC = () => {
         return <Shop addToCart={addToCart} lang={lang} categoryFilter={shopCategory} />;
       case 'repair':
         return <Repair />;
+      case 'payment-success':
+        return <PaymentSuccess onNavigate={handleNavigate} />;
       case 'home':
       default:
         return <Home onNavigate={handleNavigate} lang={lang} />;
@@ -256,7 +322,17 @@ const App: React.FC = () => {
                               <div className="flex items-center gap-3 mt-2">
                                   <button onClick={() => updateQuantity(item.id, -1)} className="p-1.5 bg-[var(--bg-card)] border border-[var(--border)] rounded hover:border-[var(--primary)] text-[var(--text-main)] transition-colors"><Minus size={12} /></button>
                                   <span className="text-sm font-medium w-4 text-center text-[var(--text-main)]">{item.quantity}</span>
-                                  <button onClick={() => updateQuantity(item.id, 1)} className="p-1.5 bg-[var(--bg-card)] border border-[var(--border)] rounded hover:border-[var(--primary)] text-[var(--text-main)] transition-colors"><Plus size={12} /></button>
+                                  <button
+                                    onClick={() => updateQuantity(item.id, 1)}
+                                    disabled={item.quantity >= item.stock}
+                                    className={`p-1.5 bg-[var(--bg-card)] border border-[var(--border)] rounded text-[var(--text-main)] transition-colors ${
+                                      item.quantity >= item.stock
+                                        ? 'opacity-40 cursor-not-allowed'
+                                        : 'hover:border-[var(--primary)]'
+                                    }`}
+                                  >
+                                    <Plus size={12} />
+                                  </button>
                               </div>
                            </div>
                            <button onClick={() => removeFromCart(item.id)} className="text-[var(--text-muted)] hover:text-red-500 transition-colors self-start p-2"><Trash2 size={18} /></button>
@@ -289,6 +365,9 @@ const App: React.FC = () => {
                     </div>
                     {checkoutError && (
                       <div className="text-sm text-red-500 mb-4">{checkoutError}</div>
+                    )}
+                    {cartNotice && (
+                      <div className="text-sm text-amber-500 mb-4">{cartNotice}</div>
                     )}
                     <div className="flex justify-between text-xl font-bold text-[var(--text-main)] mb-6">
                        <span>{t.total}</span>

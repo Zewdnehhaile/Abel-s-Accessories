@@ -78,7 +78,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate, lang }) => {
       </section>
 
       {/* Main Features Grid */}
-      <section className="max-w-[1300px] mx-auto px-[5%] pt-0 pb-20 relative z-20 w-full -mt-16 md:-mt-28">
+      <section className="max-w-[1300px] mx-auto px-[5%] pt-6 pb-20 relative z-20 w-full mt-2 md:mt-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           
           {/* Card 1: Certified Pre-Owned */}

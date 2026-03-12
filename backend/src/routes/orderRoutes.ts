@@ -1,13 +1,13 @@
 import express from 'express';
 import { createOrder, verifyOrderPayment, getOrders } from '../controllers/orderController';
-import { protect, authorize } from '../middleware/authMiddleware';
+import { protect, authorize, optionalProtect } from '../middleware/authMiddleware';
 
 const router = express.Router();
 
 router.route('/')
   .get(protect, authorize('shop_admin', 'super_admin'), getOrders)
-  .post(protect, createOrder);
+  .post(optionalProtect, createOrder);
 
-router.post('/verify-payment', protect, verifyOrderPayment);
+router.post('/verify-payment', optionalProtect, verifyOrderPayment);
 
 export default router;

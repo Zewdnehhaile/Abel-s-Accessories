@@ -6,16 +6,32 @@ import { createRepairRequest, trackRepair } from '../services/repairService';
 type PaymentMethod = 'telebirr' | 'cbe' | 'chapa' | 'cash';
 
 const PaymentBadge: React.FC<{ method: PaymentMethod }> = ({ method }) => {
-  const styles: Record<PaymentMethod, { label: string; bg: string; text: string }> = {
-    telebirr: { label: 'TB', bg: 'from-emerald-500 to-green-600', text: 'text-white' },
-    cbe: { label: 'CBE', bg: 'from-blue-500 to-indigo-600', text: 'text-white' },
-    chapa: { label: 'CH', bg: 'from-amber-500 to-orange-500', text: 'text-white' },
-    cash: { label: '$', bg: 'from-slate-500 to-slate-700', text: 'text-white' }
+  const logos: Record<PaymentMethod, string | null> = {
+    telebirr: '/telebirr.svg',
+    cbe: '/cbe.svg',
+    chapa: '/chapa.svg',
+    cash: null
   };
-  const style = styles[method];
+  const fallback: Record<PaymentMethod, string> = {
+    telebirr: 'TB',
+    cbe: 'CBE',
+    chapa: 'CH',
+    cash: '$'
+  };
+  const bg: Record<PaymentMethod, string> = {
+    telebirr: 'from-emerald-500 to-green-600',
+    cbe: 'from-blue-500 to-indigo-600',
+    chapa: 'from-amber-500 to-orange-500',
+    cash: 'from-slate-500 to-slate-700'
+  };
+  const logo = logos[method];
   return (
-    <span className={`inline-flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br ${style.bg} ${style.text} text-[10px] font-black`}>
-      {style.label}
+    <span className={`inline-flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br ${bg[method]} text-white text-[10px] font-black overflow-hidden`}>
+      {logo ? (
+        <img src={logo} alt={`${method} logo`} className="w-6 h-6" />
+      ) : (
+        fallback[method]
+      )}
     </span>
   );
 };
@@ -154,8 +170,9 @@ const Repair: React.FC = () => {
                         <form onSubmit={handleSubmitRequest} className="space-y-6">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                               <div>
-                                  <label className="block text-sm font-semibold mb-2 text-[var(--text-main)]">Full Name</label>
+                                  <label htmlFor="repair-name" className="block text-sm font-semibold mb-2 text-[var(--text-main)]">Full Name</label>
                                   <input 
+                                      id="repair-name"
                                       type="text" 
                                       className="form-control"
                                       placeholder="e.g. Dawit Kebede"
@@ -165,8 +182,9 @@ const Repair: React.FC = () => {
                                   />
                               </div>
                               <div>
-                                  <label className="block text-sm font-semibold mb-2 text-[var(--text-main)]">Phone Number</label>
+                                  <label htmlFor="repair-phone" className="block text-sm font-semibold mb-2 text-[var(--text-main)]">Phone Number</label>
                                   <input 
+                                      id="repair-phone"
                                       type="tel" 
                                       className="form-control"
                                       placeholder="+251 ..."
@@ -178,8 +196,9 @@ const Repair: React.FC = () => {
                           </div>
 
                           <div>
-                              <label className="block text-sm font-semibold mb-2 text-[var(--text-main)]">Device Model</label>
+                              <label htmlFor="repair-device" className="block text-sm font-semibold mb-2 text-[var(--text-main)]">Device Model</label>
                               <input 
+                                  id="repair-device"
                                   type="text" 
                                   className="form-control"
                                   placeholder="e.g. iPhone 14 Pro Max"
@@ -190,8 +209,9 @@ const Repair: React.FC = () => {
                           </div>
 
                           <div>
-                              <label className="block text-sm font-semibold mb-2 text-[var(--text-main)]">Problem Description</label>
+                              <label htmlFor="repair-description" className="block text-sm font-semibold mb-2 text-[var(--text-main)]">Problem Description</label>
                               <textarea 
+                                  id="repair-description"
                                   className="form-control bg-[var(--input-bg)]"
                                   rows={4}
                                   placeholder="Briefly describe what's wrong..."

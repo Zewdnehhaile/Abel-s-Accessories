@@ -63,6 +63,23 @@ export interface SalesStat {
   amount: number;
 }
 
+export interface OrderProduct {
+  productId: string;
+  quantity: number;
+  name?: string;
+  price?: number;
+}
+
+export interface Order {
+  id: string;
+  products: OrderProduct[];
+  totalPrice: number;
+  paymentStatus: 'pending' | 'paid' | 'failed';
+  paymentMethod: string;
+  chapaTxRef?: string;
+  createdAt: string;
+}
+
 export interface Log {
   id: string;
   action: string;

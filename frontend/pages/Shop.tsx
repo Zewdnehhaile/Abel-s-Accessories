@@ -45,15 +45,6 @@ const Shop: React.FC<ShopProps> = ({ addToCart, lang, categoryFilter }) => {
     setConditionFilter('all');
   }, [categoryFilter]);
 
-  // Stable random selection of phones to show in the Accessories "All" view
-  // We pick these once per mount to prevent jitter during search/filter updates
-  const randomFeaturedPhones = useMemo(() => {
-    return products
-      .filter(p => p.category === 'Phone')
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 4);
-  }, [products]);
-
   const filteredProducts = useMemo(() => {
     // 1. Base criteria that apply to everything (Search & Condition)
     const baseFiltered = products.filter(p => {
@@ -82,26 +73,15 @@ const Shop: React.FC<ShopProps> = ({ addToCart, lang, categoryFilter }) => {
     } else {
       // Logic for Accessories page
       if (activeType === 'all') {
-        // Show all accessories
-        const accessories = baseFiltered.filter(p => p.category !== 'Phone');
-        
-        // Also show a subset of phones (randomized per session)
-        // We re-filter the random selection to ensure they match search/condition
-        const phonesToShow = randomFeaturedPhones.filter(p => {
-            const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesCondition = conditionFilter === 'all' || p.condition === conditionFilter;
-            return matchesSearch && matchesCondition;
-        });
-
-        // Mix them together (phones at the end or interspersed)
-        return [...accessories, ...phonesToShow];
-      } else if (activeType === 'phone') {
-        return baseFiltered.filter(p => p.category === 'Phone');
-      } else {
-        return baseFiltered.filter(p => p.category.toLowerCase() === activeType.toLowerCase());
+        // Show all accessories only
+        return baseFiltered.filter(p => p.category !== 'Phone');
       }
+
+      return baseFiltered.filter(
+        p => p.category !== 'Phone' && p.category.toLowerCase() === activeType.toLowerCase()
+      );
     }
-  }, [searchTerm, activeType, conditionFilter, categoryFilter, randomFeaturedPhones, products]);
+  }, [searchTerm, activeType, conditionFilter, categoryFilter, products]);
 
   const discountedProducts = useMemo(
     () => filteredProducts.filter(p => (p.discountPercent ?? 0) > 0),
@@ -138,7 +118,6 @@ const Shop: React.FC<ShopProps> = ({ addToCart, lang, categoryFilter }) => {
     } else {
       const accTypes = [
         { id: 'all', label: 'All Accessories' },
-        { id: 'phone', label: 'Mobile Phones' },
         { id: 'case', label: 'Cases' },
         { id: 'charger', label: 'Chargers' },
         { id: 'audio', label: 'Audio' },
@@ -218,6 +197,8 @@ const Shop: React.FC<ShopProps> = ({ addToCart, lang, categoryFilter }) => {
             {discountedProducts.map(product => {
               const finalPrice = getDiscountedPrice(product);
               const hasDiscount = (product.discountPercent ?? 0) > 0;
+              const isOutOfStock = product.stock <= 0 || product.status === 'out_of_stock';
+              const isLowStock = product.stock > 0 && product.stock <= 5;
               return (
                 <div key={`discount-${product.id}`} className="card group flex flex-col justify-between overflow-hidden p-0 border-0 bg-[var(--bg-card)] ring-1 ring-[var(--border)] hover:ring-[var(--primary)] transition-all">
                   <div className="h-64 relative overflow-hidden bg-[#0F1014] flex items-center justify-center">
@@ -250,6 +231,14 @@ const Shop: React.FC<ShopProps> = ({ addToCart, lang, categoryFilter }) => {
                       <div className="flex-1">
                           <h3 className="font-bold text-lg mb-1 text-[var(--text-main)] line-clamp-1">{product.name}</h3>
                           <p className="text-[var(--text-muted)] text-sm line-clamp-2 mb-4">{product.description}</p>
+                          <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
+                            <span className={`${isOutOfStock ? 'text-red-500' : 'text-emerald-500'}`}>
+                              {isOutOfStock ? 'Out of stock' : `${product.stock} in stock`}
+                            </span>
+                            {isLowStock && (
+                              <span className="text-amber-500">Only {product.stock} left</span>
+                            )}
+                          </div>
                       </div>
                       <div className="flex items-center justify-between mt-auto pt-4 border-t border-[var(--border)]">
                           <div className="flex flex-col">
@@ -258,7 +247,7 @@ const Shop: React.FC<ShopProps> = ({ addToCart, lang, categoryFilter }) => {
                           </div>
                           <button 
                               onClick={() => addToCart(product)}
-                              disabled={product.status === 'out_of_stock'}
+                              disabled={isOutOfStock}
                               className="btn btn-primary btn-sm px-4 group/btn relative overflow-hidden w-32"
                           >
                               <span className="flex items-center gap-2 transition-transform duration-300 group-hover/btn:-translate-y-10">
@@ -282,6 +271,8 @@ const Shop: React.FC<ShopProps> = ({ addToCart, lang, categoryFilter }) => {
         {regularProducts.map(product => {
           const finalPrice = getDiscountedPrice(product);
           const hasDiscount = (product.discountPercent ?? 0) > 0;
+          const isOutOfStock = product.stock <= 0 || product.status === 'out_of_stock';
+          const isLowStock = product.stock > 0 && product.stock <= 5;
           return (
           <div key={product.id} className="card group flex flex-col justify-between overflow-hidden p-0 border-0 bg-[var(--bg-card)] ring-1 ring-[var(--border)] hover:ring-[var(--primary)] transition-all">
             <div className="h-64 relative overflow-hidden bg-[#0F1014] flex items-center justify-center">
@@ -314,6 +305,14 @@ const Shop: React.FC<ShopProps> = ({ addToCart, lang, categoryFilter }) => {
                 <div className="flex-1">
                     <h3 className="font-bold text-lg mb-1 text-[var(--text-main)] line-clamp-1">{product.name}</h3>
                     <p className="text-[var(--text-muted)] text-sm line-clamp-2 mb-4">{product.description}</p>
+                    <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
+                      <span className={`${isOutOfStock ? 'text-red-500' : 'text-emerald-500'}`}>
+                        {isOutOfStock ? 'Out of stock' : `${product.stock} in stock`}
+                      </span>
+                      {isLowStock && (
+                        <span className="text-amber-500">Only {product.stock} left</span>
+                      )}
+                    </div>
                 </div>
                 <div className="flex items-center justify-between mt-auto pt-4 border-t border-[var(--border)]">
                     <div className="flex flex-col">
@@ -324,7 +323,7 @@ const Shop: React.FC<ShopProps> = ({ addToCart, lang, categoryFilter }) => {
                     </div>
                     <button 
                         onClick={() => addToCart(product)}
-                        disabled={product.status === 'out_of_stock'}
+                        disabled={isOutOfStock}
                         className="btn btn-primary btn-sm px-4 group/btn relative overflow-hidden w-32"
                     >
                         <span className="flex items-center gap-2 transition-transform duration-300 group-hover/btn:-translate-y-10">

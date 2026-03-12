@@ -1,14 +1,38 @@
 import { Request, Response, NextFunction } from 'express';
 import Order from '../models/Order';
 import Product from '../models/Product';
+import User from '../models/User';
 import { AppError } from '../utils/AppError';
 import { catchAsync } from '../utils/catchAsync';
 import { initializePayment, verifyPayment } from '../services/chapaService';
 
 export const createOrder = catchAsync(async (req: any, res: Response, next: NextFunction) => {
-  const { products, shopId, paymentMethod } = req.body;
+  const { products, shopId, paymentMethod, customerName, customerEmail } = req.body;
+
+  if (!products || !Array.isArray(products) || products.length === 0) {
+    return next(new AppError('Order must include products', 400));
+  }
+
+  const normalizedPaymentMethod = String(paymentMethod || '').toLowerCase();
+  const allowedPaymentMethods = ['chapa', 'telebirr', 'cbe', 'cbebirr', 'cash'];
+  if (!allowedPaymentMethods.includes(normalizedPaymentMethod)) {
+    return next(new AppError('Invalid payment method', 400));
+  }
 
   let totalPrice = 0;
+  const stockReservations: Array<{ product: any; quantity: number }> = [];
+
+  const resolveOrderUser = async () => {
+    if (req.user) return req.user;
+    const fallback = await User.findOne({ role: 'shop_admin' }) || await User.findOne({ role: 'super_admin' });
+    if (!fallback) {
+      throw new AppError('No admin user available to attach the order', 400);
+    }
+    return fallback;
+  };
+
+  const orderUser = await resolveOrderUser();
+  let resolvedShopId = shopId;
   
   // Calculate total and verify stock
   for (const item of products) {
@@ -20,30 +44,51 @@ export const createOrder = catchAsync(async (req: any, res: Response, next: Next
       return next(new AppError(`Insufficient stock for ${product.name}`, 400));
     }
     totalPrice += product.price * item.quantity;
+    stockReservations.push({ product, quantity: item.quantity });
+    if (!resolvedShopId) {
+      resolvedShopId = product.shopId?.toString();
+    }
+  }
+
+  if (!resolvedShopId) {
+    return next(new AppError('Shop ID is required to place an order', 400));
   }
 
   const tx_ref = `TX-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  const isCashPayment = normalizedPaymentMethod === 'cash';
 
   const order = await Order.create({
-    userId: req.user.id,
-    shopId,
+    userId: orderUser.id,
+    shopId: resolvedShopId,
     products,
     totalPrice,
-    paymentMethod,
+    paymentMethod: normalizedPaymentMethod,
     chapaTxRef: tx_ref,
-    paymentStatus: 'pending'
+    paymentStatus: isCashPayment ? 'paid' : 'pending'
   });
 
-  // Initialize Chapa Payment
+  if (isCashPayment) {
+    for (const item of stockReservations) {
+      item.product.stock = Math.max(0, item.product.stock - item.quantity);
+      await item.product.save();
+    }
+  }
+
+  // Initialize Chapa Payment (used for Chapa checkout and its channels like Telebirr/CBE Birr)
   let paymentUrl = '';
-  if (paymentMethod === 'chapa') {
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+  const chapaMethods = ['chapa', 'telebirr', 'cbe', 'cbebirr'];
+  if (chapaMethods.includes(normalizedPaymentMethod)) {
+    const requestOrigin = typeof req.headers.origin === 'string' ? req.headers.origin : '';
+    const frontendUrl = requestOrigin || process.env.FRONTEND_URL || 'http://localhost:5173';
+    const nameSource = req.user?.name || customerName || orderUser.name || 'Customer';
+    const emailSource = req.user?.email || customerEmail || orderUser.email;
+    const nameParts = nameSource.split(' ');
     const paymentInfo = await initializePayment(
       totalPrice,
       'ETB',
-      req.user.email,
-      req.user.name.split(' ')[0],
-      req.user.name.split(' ')[1] || 'User',
+      emailSource,
+      nameParts[0] || 'Customer',
+      nameParts[1] || 'User',
       tx_ref,
       `${frontendUrl}/payment-success`,
       `${frontendUrl}/payment-success`
@@ -60,6 +105,9 @@ export const createOrder = catchAsync(async (req: any, res: Response, next: Next
 
 export const verifyOrderPayment = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
   const { tx_ref } = req.body;
+  if (!tx_ref) {
+    return next(new AppError('tx_ref is required', 400));
+  }
 
   const verification = await verifyPayment(tx_ref);
 
@@ -109,7 +157,10 @@ export const getOrders = catchAsync(async (req: any, res: Response, next: NextFu
   }
   // Super admin sees all
 
-  const orders = await Order.find(query).populate('userId', 'name email').populate('products.productId', 'name price');
+  const orders = await Order.find(query)
+    .sort({ createdAt: -1 })
+    .populate('userId', 'name email')
+    .populate('products.productId', 'name price');
 
   res.status(200).json({
     success: true,

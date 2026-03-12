@@ -11,9 +11,17 @@ export const initializePayment = async (
   returnUrl: string
 ) => {
   try {
+    const baseUrl = (process.env.CHAPA_BASE_URL || 'https://api.chapa.co/v1').trim();
+    const secretKey = (process.env.CHAPA_SECRET_KEY || '').trim();
+    if (!baseUrl) {
+      throw new Error('CHAPA_BASE_URL is not configured');
+    }
+    if (!secretKey) {
+      throw new Error('CHAPA_SECRET_KEY is not configured');
+    }
     const config = {
       headers: {
-        Authorization: `Bearer ${process.env.CHAPA_SECRET_KEY}`,
+        Authorization: `Bearer ${secretKey}`,
         'Content-Type': 'application/json'
       }
     };
@@ -28,29 +36,57 @@ export const initializePayment = async (
       callback_url: callbackUrl,
       return_url: returnUrl,
       customization: {
-        title: 'Abel Accessories Payment',
-        description: 'Payment for order'
+        title: 'Abel Accessories',
+        description: 'Order payment'
       }
     };
 
-    const response = await axios.post(`${process.env.CHAPA_BASE_URL}/transaction/initialize`, data, config);
+    const response = await axios.post(`${baseUrl}/transaction/initialize`, data, config);
     return response.data;
   } catch (error: any) {
-    throw new Error(error.response ? error.response.data.message : error.message);
+    const responseData = error?.response?.data;
+    if (responseData) {
+      if (typeof responseData === 'string') {
+        throw new Error(responseData);
+      }
+      if (typeof responseData?.message === 'string') {
+        throw new Error(responseData.message);
+      }
+      throw new Error(JSON.stringify(responseData));
+    }
+    throw new Error(error?.message || 'Chapa initialize failed');
   }
 };
 
 export const verifyPayment = async (tx_ref: string) => {
   try {
+    const baseUrl = (process.env.CHAPA_BASE_URL || 'https://api.chapa.co/v1').trim();
+    const secretKey = (process.env.CHAPA_SECRET_KEY || '').trim();
+    if (!baseUrl) {
+      throw new Error('CHAPA_BASE_URL is not configured');
+    }
+    if (!secretKey) {
+      throw new Error('CHAPA_SECRET_KEY is not configured');
+    }
     const config = {
       headers: {
-        Authorization: `Bearer ${process.env.CHAPA_SECRET_KEY}`
+        Authorization: `Bearer ${secretKey}`
       }
     };
 
-    const response = await axios.get(`${process.env.CHAPA_BASE_URL}/transaction/verify/${tx_ref}`, config);
+    const response = await axios.get(`${baseUrl}/transaction/verify/${tx_ref}`, config);
     return response.data;
   } catch (error: any) {
-    throw new Error(error.response ? error.response.data.message : error.message);
+    const responseData = error?.response?.data;
+    if (responseData) {
+      if (typeof responseData === 'string') {
+        throw new Error(responseData);
+      }
+      if (typeof responseData?.message === 'string') {
+        throw new Error(responseData.message);
+      }
+      throw new Error(JSON.stringify(responseData));
+    }
+    throw new Error(error?.message || 'Chapa verification failed');
   }
 };

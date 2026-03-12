@@ -355,8 +355,9 @@ const SuperAdminDashboard: React.FC = () => {
         )}
         <form onSubmit={handleProfileSave} className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs uppercase text-gray-400 font-bold mb-2">Full Name</label>
+            <label htmlFor="super-profile-name" className="block text-xs uppercase text-gray-400 font-bold mb-2">Full Name</label>
             <input
+              id="super-profile-name"
               type="text"
               value={profileForm.name}
               onChange={(e) => setProfileForm(prev => ({ ...prev, name: e.target.value }))}
@@ -364,8 +365,9 @@ const SuperAdminDashboard: React.FC = () => {
             />
           </div>
           <div>
-            <label className="block text-xs uppercase text-gray-400 font-bold mb-2">Email</label>
+            <label htmlFor="super-profile-email" className="block text-xs uppercase text-gray-400 font-bold mb-2">Email</label>
             <input
+              id="super-profile-email"
               type="email"
               value={profileForm.email}
               onChange={(e) => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
@@ -373,8 +375,9 @@ const SuperAdminDashboard: React.FC = () => {
             />
           </div>
           <div>
-            <label className="block text-xs uppercase text-gray-400 font-bold mb-2">New Password</label>
+            <label htmlFor="super-profile-password" className="block text-xs uppercase text-gray-400 font-bold mb-2">New Password</label>
             <input
+              id="super-profile-password"
               type="password"
               value={profileForm.password}
               onChange={(e) => setProfileForm(prev => ({ ...prev, password: e.target.value }))}
@@ -383,8 +386,9 @@ const SuperAdminDashboard: React.FC = () => {
             />
           </div>
           <div>
-            <label className="block text-xs uppercase text-gray-400 font-bold mb-2">Confirm Password</label>
+            <label htmlFor="super-profile-confirm" className="block text-xs uppercase text-gray-400 font-bold mb-2">Confirm Password</label>
             <input
+              id="super-profile-confirm"
               type="password"
               value={profileForm.confirmPassword}
               onChange={(e) => setProfileForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
@@ -497,8 +501,9 @@ const SuperAdminDashboard: React.FC = () => {
 
             <form onSubmit={handleSaveUser} className="space-y-4">
               <div>
-                <label className="block text-xs uppercase text-gray-400 font-bold mb-2">Full Name</label>
+                <label htmlFor="user-name" className="block text-xs uppercase text-gray-400 font-bold mb-2">Full Name</label>
                 <input
+                  id="user-name"
                   type="text"
                   value={userForm.name}
                   onChange={(e) => setUserForm(prev => ({ ...prev, name: e.target.value }))}
@@ -507,8 +512,9 @@ const SuperAdminDashboard: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block text-xs uppercase text-gray-400 font-bold mb-2">Email</label>
+                <label htmlFor="user-email" className="block text-xs uppercase text-gray-400 font-bold mb-2">Email</label>
                 <input
+                  id="user-email"
                   type="email"
                   value={userForm.email}
                   onChange={(e) => setUserForm(prev => ({ ...prev, email: e.target.value }))}
@@ -517,8 +523,9 @@ const SuperAdminDashboard: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block text-xs uppercase text-gray-400 font-bold mb-2">Role</label>
+                <label htmlFor="user-role" className="block text-xs uppercase text-gray-400 font-bold mb-2">Role</label>
                 <select
+                  id="user-role"
                   value={userForm.role}
                   onChange={(e) => setUserForm(prev => ({ ...prev, role: e.target.value }))}
                   className="w-full bg-dark-800 border border-dark-700 rounded-lg px-4 py-3 text-white"
@@ -528,10 +535,11 @@ const SuperAdminDashboard: React.FC = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-xs uppercase text-gray-400 font-bold mb-2">
+                <label htmlFor="user-password" className="block text-xs uppercase text-gray-400 font-bold mb-2">
                   {editingUser ? 'New Password (optional)' : 'Password'}
                 </label>
                 <input
+                  id="user-password"
                   type="password"
                   value={userForm.password}
                   onChange={(e) => setUserForm(prev => ({ ...prev, password: e.target.value }))}

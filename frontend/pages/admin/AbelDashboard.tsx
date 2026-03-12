@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { RepairStatus, Product, RepairRequest } from '../../types';
-import { DollarSign, PenTool, AlertTriangle, Check, X, Plus, Upload, Trash2, Pencil, Search } from 'lucide-react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { RepairStatus, Product, RepairRequest, Order } from '../../types';
+import { DollarSign, PenTool, AlertTriangle, Check, X, Plus, Upload, Trash2, Pencil, Search, ImageOff } from 'lucide-react';
 import {
   fetchProducts,
   createProduct,
@@ -12,6 +12,7 @@ import {
 } from '../../services/productService';
 import { fetchRepairs, updateRepairStatus as updateRepairStatusApi } from '../../services/repairService';
 import { fetchProfile, updateProfile } from '../../services/userService';
+import { fetchOrders } from '../../services/orderService';
 
 const PRODUCT_NAME_OPTIONS = [
   'iPhone 15 Pro Max',
@@ -59,6 +60,21 @@ type ProductFormState = {
   brand: string;
 };
 
+const createDefaultProductForm = (): ProductFormState => ({
+  name: PRODUCT_NAME_OPTIONS[0],
+  category: 'Phone',
+  condition: 'new',
+  price: 1,
+  discountPercent: 0,
+  stock: 1,
+  description: '',
+  image: '',
+  brand: ''
+});
+
+const normalizeSearchText = (value: string) =>
+  value.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+
 const AbelDashboard: React.FC = () => {
   const [repairs, setRepairs] = useState<RepairRequest[]>([]);
   const [isLoadingRepairs, setIsLoadingRepairs] = useState(true);
@@ -74,21 +90,16 @@ const AbelDashboard: React.FC = () => {
   const [isSavingProduct, setIsSavingProduct] = useState(false);
   const [productFormError, setProductFormError] = useState('');
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [newProduct, setNewProduct] = useState<ProductFormState>({
-    name: PRODUCT_NAME_OPTIONS[0],
-    category: 'Phone',
-    condition: 'new',
-    price: 0,
-    discountPercent: 0,
-    stock: 0,
-    description: '',
-    image: '',
-    brand: ''
-  });
+  const [newProduct, setNewProduct] = useState<ProductFormState>(createDefaultProductForm());
+  const [showNameSuggestions, setShowNameSuggestions] = useState(false);
   const [imageQuery, setImageQuery] = useState('');
   const [imageResults, setImageResults] = useState<string[]>([]);
   const [isImageSearching, setIsImageSearching] = useState(false);
   const [imageSearchError, setImageSearchError] = useState('');
+  const [imagePreviewError, setImagePreviewError] = useState(false);
+  const [productImageErrors, setProductImageErrors] = useState<Record<string, boolean>>({});
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [orderError, setOrderError] = useState('');
   const [profileForm, setProfileForm] = useState({
     name: '',
     email: '',
@@ -141,6 +152,30 @@ const AbelDashboard: React.FC = () => {
 
   useEffect(() => {
     let isMounted = true;
+
+    const loadOrders = async () => {
+      try {
+        const data = await fetchOrders();
+        if (!isMounted) return;
+        setOrders(data);
+        setOrderError('');
+      } catch (err: any) {
+        if (!isMounted) return;
+        setOrderError(err?.message || 'Failed to load sales data.');
+      }
+    };
+
+    loadOrders();
+    const poll = window.setInterval(loadOrders, 30000);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(poll);
+    };
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
     fetchProfile()
       .then(profile => {
         if (!isMounted) return;
@@ -170,22 +205,14 @@ const AbelDashboard: React.FC = () => {
   };
 
   const resetProductForm = () => {
-    setNewProduct({
-      name: PRODUCT_NAME_OPTIONS[0],
-      category: 'Phone',
-      condition: 'new',
-      price: 0,
-      discountPercent: 0,
-      stock: 0,
-      description: '',
-      image: '',
-      brand: ''
-    });
+    setNewProduct(createDefaultProductForm());
     setEditingProduct(null);
+    setShowNameSuggestions(false);
     setImageQuery('');
     setImageResults([]);
     setImageSearchError('');
     setProductFormError('');
+    setImagePreviewError(false);
   };
 
   const openAddProduct = () => {
@@ -206,6 +233,8 @@ const AbelDashboard: React.FC = () => {
     const brand = newProduct.brand.trim() || trimmedName.split(' ')[0] || '';
 
     const discountPercent = Math.min(90, Math.max(0, Number(newProduct.discountPercent) || 0));
+    const safePrice = Math.max(1, Number(newProduct.price) || 0);
+    const safeStock = Math.max(1, Math.floor(Number(newProduct.stock) || 0));
 
     return {
       name: trimmedName,
@@ -214,10 +243,10 @@ const AbelDashboard: React.FC = () => {
       subcategory,
       brand,
       condition: newProduct.condition,
-      price: Number(newProduct.price),
+      price: safePrice,
       discountPercent,
-      stock: Number(newProduct.stock),
-      imageUrl: newProduct.image
+      stock: safeStock,
+      imageUrl: newProduct.image.trim()
     };
   };
 
@@ -227,8 +256,8 @@ const AbelDashboard: React.FC = () => {
     setProductFormError('');
     try {
       const payload = buildPayload();
-      if (!payload.name || !payload.price) {
-        setProductFormError('Please provide a product name and price.');
+      if (!payload.name || payload.price < 1 || payload.stock < 1) {
+        setProductFormError('Please provide a product name, price above 0, and stock above 0.');
         return;
       }
       if (editingProduct) {
@@ -253,6 +282,7 @@ const AbelDashboard: React.FC = () => {
       const reader = new FileReader();
       reader.onloadend = () => {
         setNewProduct({ ...newProduct, image: reader.result as string });
+        setImagePreviewError(false);
       };
       reader.readAsDataURL(file);
     }
@@ -276,9 +306,11 @@ const AbelDashboard: React.FC = () => {
       brand: product.brand || ''
     });
     setProductFormError('');
+    setShowNameSuggestions(false);
     setImageQuery('');
     setImageResults([]);
     setImageSearchError('');
+    setImagePreviewError(false);
     setIsAddProductOpen(true);
   };
 
@@ -294,12 +326,18 @@ const AbelDashboard: React.FC = () => {
   };
 
   const handleImageSearch = async () => {
-    if (!imageQuery.trim()) return;
+    const trimmedQuery = (imageQuery.trim() || newProduct.name.trim());
+    if (!trimmedQuery) return;
+
+    setNewProduct(prev => ({ ...prev, name: trimmedQuery }));
+    setImageQuery(trimmedQuery);
+    setShowNameSuggestions(false);
     setIsImageSearching(true);
     setImageSearchError('');
     try {
-      const results = await searchProductImages(imageQuery.trim());
+      const results = await searchProductImages(trimmedQuery);
       setImageResults(results);
+      setImagePreviewError(false);
       if (results.length === 0) {
         setImageSearchError('No images found. Try a different query.');
       }
@@ -336,7 +374,49 @@ const AbelDashboard: React.FC = () => {
     }
   };
 
-  const totalSalesToday = 12500;
+  const productNamePool = useMemo(() => {
+    const knownNames = products.map(p => p.name.trim()).filter(Boolean);
+    return Array.from(new Set([...PRODUCT_NAME_OPTIONS, ...knownNames]));
+  }, [products]);
+
+  const productNameSuggestions = useMemo(() => {
+    const query = newProduct.name.trim();
+    if (!query) {
+      return productNamePool.slice(0, 8);
+    }
+
+    const normalizedQuery = normalizeSearchText(query);
+    const ranked = productNamePool
+      .map(name => {
+        const normalizedName = normalizeSearchText(name);
+        let score = 0;
+        if (normalizedName === normalizedQuery) score += 100;
+        if (normalizedName.startsWith(normalizedQuery)) score += 60;
+        if (normalizedName.includes(normalizedQuery)) score += 40;
+        if (normalizedQuery.split(' ').every(token => normalizedName.includes(token))) score += 20;
+        return { name, score };
+      })
+      .filter(item => item.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .map(item => item.name);
+
+    if (!ranked.some(name => normalizeSearchText(name) === normalizedQuery)) {
+      ranked.unshift(query);
+    }
+
+    return ranked.slice(0, 8);
+  }, [newProduct.name, productNamePool]);
+
+  const todayKey = new Date().toDateString();
+  const paidOrdersToday = orders.filter(order => {
+    if (order.paymentStatus !== 'paid') return false;
+    const orderDate = new Date(order.createdAt);
+    if (Number.isNaN(orderDate.getTime())) return false;
+    return orderDate.toDateString() === todayKey;
+  });
+
+  const totalSalesToday = paidOrdersToday.reduce((sum, order) => sum + order.totalPrice, 0);
+  const todaySalesCount = paidOrdersToday.length;
   const pendingRepairsCount = repairs.filter(r =>
     r.repairStatus === RepairStatus.RECEIVED ||
     r.repairStatus === RepairStatus.IN_PROGRESS ||
@@ -385,6 +465,7 @@ const AbelDashboard: React.FC = () => {
                   <div>
                       <p className="text-[var(--text-muted)] text-sm font-bold uppercase tracking-wider mb-1">Daily Revenue</p>
                       <h3 className="text-3xl font-black text-[var(--text-main)]">{totalSalesToday.toLocaleString()} ETB</h3>
+                      <p className="text-xs text-[var(--text-muted)] mt-1">{todaySalesCount} sales today</p>
                   </div>
               </div>
               <div className="card p-8 border-[var(--border)] bg-[var(--bg-card)] flex items-center gap-6">
@@ -406,6 +487,10 @@ const AbelDashboard: React.FC = () => {
                   </div>
               </div>
           </div>
+      )}
+
+      {activeView === 'overview' && orderError && (
+        <div className="mt-4 text-sm text-red-500">{orderError}</div>
       )}
 
       {activeView === 'repairs' && (
@@ -521,8 +606,18 @@ const AbelDashboard: React.FC = () => {
                                   return (
                                     <tr key={product.id} className="hover:bg-[var(--bg-body)] transition-colors">
                                         <td className="px-6 py-5 flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-xl border border-[var(--border)] overflow-hidden bg-slate-900">
-                                              <img src={product.image} alt="" className="w-full h-full object-cover" />
+                                            <div className="w-12 h-12 rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--bg-body)] flex items-center justify-center">
+                                              {product.image && !productImageErrors[product.id] ? (
+                                                <img
+                                                  src={product.image}
+                                                  alt=""
+                                                  className="w-full h-full object-cover"
+                                                  referrerPolicy="no-referrer"
+                                                  onError={() => setProductImageErrors(prev => ({ ...prev, [product.id]: true }))}
+                                                />
+                                              ) : (
+                                                <ImageOff size={18} className="text-[var(--text-muted)]" />
+                                              )}
                                             </div>
                                             <span className="font-bold">{product.name}</span>
                                         </td>
@@ -607,8 +702,9 @@ const AbelDashboard: React.FC = () => {
                   )}
                   <form onSubmit={handleProfileSave} className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                          <label className="block text-xs font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">Full Name</label>
+                          <label htmlFor="profile-name" className="block text-xs font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">Full Name</label>
                           <input
+                              id="profile-name"
                               type="text"
                               className="form-control h-12 font-bold"
                               value={profileForm.name}
@@ -616,8 +712,9 @@ const AbelDashboard: React.FC = () => {
                           />
                       </div>
                       <div>
-                          <label className="block text-xs font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">Email</label>
+                          <label htmlFor="profile-email" className="block text-xs font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">Email</label>
                           <input
+                              id="profile-email"
                               type="email"
                               className="form-control h-12 font-bold"
                               value={profileForm.email}
@@ -625,8 +722,9 @@ const AbelDashboard: React.FC = () => {
                           />
                       </div>
                       <div>
-                          <label className="block text-xs font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">New Password</label>
+                          <label htmlFor="profile-password" className="block text-xs font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">New Password</label>
                           <input
+                              id="profile-password"
                               type="password"
                               className="form-control h-12 font-bold"
                               value={profileForm.password}
@@ -635,8 +733,9 @@ const AbelDashboard: React.FC = () => {
                           />
                       </div>
                       <div>
-                          <label className="block text-xs font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">Confirm Password</label>
+                          <label htmlFor="profile-confirm-password" className="block text-xs font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">Confirm Password</label>
                           <input
+                              id="profile-confirm-password"
                               type="password"
                               className="form-control h-12 font-bold"
                               value={profileForm.confirmPassword}
@@ -681,11 +780,26 @@ const AbelDashboard: React.FC = () => {
                           <label className="block text-xs font-black uppercase tracking-widest text-[var(--text-muted)] mb-3">Product Visual</label>
                           <div 
                             onClick={triggerFileInput}
-                            className="w-full aspect-video rounded-3xl border-2 border-dashed border-[var(--border)] bg-[var(--bg-body)] flex flex-col items-center justify-center cursor-pointer hover:border-[var(--primary)] transition-all overflow-hidden group shadow-inner relative"
+                            className="w-full aspect-video rounded-3xl border-2 border-dashed border-[var(--border)] bg-[var(--bg-body)]/60 flex flex-col items-center justify-center cursor-pointer hover:border-[var(--primary)] transition-all overflow-hidden group shadow-inner relative"
                           >
                               {newProduct.image ? (
                                   <div className="relative w-full h-full">
-                                      <img src={newProduct.image} alt="Preview" className="w-full h-full object-cover" />
+                                      {!imagePreviewError ? (
+                                        <img
+                                          src={newProduct.image}
+                                          alt="Preview"
+                                          className="w-full h-full object-cover"
+                                          referrerPolicy="no-referrer"
+                                          onError={() => setImagePreviewError(true)}
+                                        />
+                                      ) : (
+                                        <div className="w-full h-full flex flex-col items-center justify-center bg-[var(--bg-card)]/80 text-[var(--text-main)]">
+                                          <ImageOff size={32} />
+                                          <span className="text-xs mt-2 text-center px-4 text-[var(--text-muted)]">
+                                            Image blocked by source. Try another image or upload.
+                                          </span>
+                                        </div>
+                                      )}
                                       <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity backdrop-blur-sm">
                                           <div className="flex flex-col items-center gap-2">
                                               <Upload className="text-white" size={32} />
@@ -694,11 +808,12 @@ const AbelDashboard: React.FC = () => {
                                       </div>
                                   </div>
                               ) : (
-                                  <div className="flex flex-col items-center gap-3">
-                                      <div className="w-16 h-16 rounded-2xl bg-[var(--primary)]/10 flex items-center justify-center text-[var(--primary)]">
+                                  <div className="flex flex-col items-center gap-3 text-center px-6">
+                                      <div className="w-16 h-16 rounded-2xl bg-white/5 border border-[var(--border)] flex items-center justify-center text-[var(--primary)]">
                                           <Upload size={32} />
                                       </div>
-                                      <span className="text-sm font-bold text-[var(--text-muted)]">Click to upload product photo</span>
+                                      <span className="text-sm font-bold text-[var(--text-main)]">Upload or choose an image</span>
+                                      <span className="text-xs text-[var(--text-muted)]">Use AI Image Search below or upload from your device.</span>
                                   </div>
                               )}
                           </div>
@@ -711,9 +826,10 @@ const AbelDashboard: React.FC = () => {
                           />
 
                           <div className="mt-6 space-y-3">
-                            <label className="block text-xs font-black uppercase tracking-widest text-[var(--text-muted)]">AI Image Search</label>
+                            <label htmlFor="product-image-search" className="block text-xs font-black uppercase tracking-widest text-[var(--text-muted)]">AI Image Search</label>
                             <div className="flex gap-2">
                               <input
+                                id="product-image-search"
                                 type="text"
                                 value={imageQuery}
                                 onChange={(e) => setImageQuery(e.target.value)}
@@ -733,15 +849,23 @@ const AbelDashboard: React.FC = () => {
                               <div className="text-xs text-red-500">{imageSearchError}</div>
                             )}
                             {imageResults.length > 0 && (
-                              <div className="grid grid-cols-3 gap-3">
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-h-[30rem] overflow-y-auto pr-1">
                                 {imageResults.map((url) => (
                                   <button
                                     key={url}
                                     type="button"
-                                    onClick={() => setNewProduct({ ...newProduct, image: url })}
+                                    onClick={() => {
+                                      setNewProduct({ ...newProduct, image: url });
+                                      setImagePreviewError(false);
+                                    }}
                                     className="relative aspect-square rounded-xl overflow-hidden border border-[var(--border)] hover:border-[var(--primary)] transition-all"
                                   >
-                                    <img src={url} alt="Search result" className="w-full h-full object-cover" />
+                                    <img
+                                      src={url}
+                                      alt="Search result"
+                                      className="w-full h-full object-cover"
+                                      referrerPolicy="no-referrer"
+                                    />
                                   </button>
                                 ))}
                               </div>
@@ -751,25 +875,50 @@ const AbelDashboard: React.FC = () => {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div className="col-span-1 md:col-span-2">
-                              <label className="block text-xs font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">Product Name</label>
-                              <input
-                                  list="product-name-options"
-                                  required
-                                  className="form-control h-12 font-bold"
-                                  value={newProduct.name}
-                                  onChange={e => setNewProduct({ ...newProduct, name: e.target.value })}
-                                  placeholder="Enter product name"
-                              />
-                              <datalist id="product-name-options">
-                                {PRODUCT_NAME_OPTIONS.map(opt => (
-                                  <option key={opt} value={opt} />
-                                ))}
-                              </datalist>
+                              <label htmlFor="product-name" className="block text-xs font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">Product Name</label>
+                              <div className="relative">
+                                <input
+                                    id="product-name"
+                                    required
+                                    autoComplete="off"
+                                    className="form-control h-12 font-bold"
+                                    value={newProduct.name}
+                                    onFocus={() => setShowNameSuggestions(true)}
+                                    onBlur={() => {
+                                      window.setTimeout(() => setShowNameSuggestions(false), 120);
+                                    }}
+                                    onChange={e => {
+                                      setNewProduct({ ...newProduct, name: e.target.value });
+                                      setShowNameSuggestions(true);
+                                    }}
+                                    placeholder="Search or enter product name"
+                                />
+                                {showNameSuggestions && productNameSuggestions.length > 0 && (
+                                  <div className="absolute z-30 mt-2 w-full max-h-56 overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--bg-card)] shadow-2xl">
+                                    {productNameSuggestions.map(option => (
+                                      <button
+                                        key={option}
+                                        type="button"
+                                        onMouseDown={e => e.preventDefault()}
+                                        onClick={() => {
+                                          setNewProduct({ ...newProduct, name: option });
+                                          setImageQuery(option);
+                                          setShowNameSuggestions(false);
+                                        }}
+                                        className="w-full px-4 py-2.5 text-left text-sm font-medium text-[var(--text-main)] hover:bg-[var(--bg-body)]"
+                                      >
+                                        {option}
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
                           </div>
                           
                           <div>
-                              <label className="block text-xs font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">Category</label>
+                              <label htmlFor="product-category" className="block text-xs font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">Category</label>
                               <select 
+                                  id="product-category"
                                   className="form-control h-12 font-bold"
                                   value={newProduct.category}
                                   onChange={e => setNewProduct({...newProduct, category: e.target.value})}
@@ -783,8 +932,9 @@ const AbelDashboard: React.FC = () => {
                               </select>
                           </div>
                           <div>
-                              <label className="block text-xs font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">Condition</label>
+                              <label htmlFor="product-condition" className="block text-xs font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">Condition</label>
                               <select 
+                                  id="product-condition"
                                   className="form-control h-12 font-bold"
                                   value={newProduct.condition}
                                   onChange={e => setNewProduct({...newProduct, condition: e.target.value as 'new' | 'used'})}
@@ -795,8 +945,9 @@ const AbelDashboard: React.FC = () => {
                           </div>
 
                           <div>
-                              <label className="block text-xs font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">Brand</label>
+                              <label htmlFor="product-brand" className="block text-xs font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">Brand</label>
                               <input 
+                                  id="product-brand"
                                   type="text" 
                                   className="form-control h-12 font-bold" 
                                   value={newProduct.brand}
@@ -805,8 +956,9 @@ const AbelDashboard: React.FC = () => {
                               />
                           </div>
                           <div>
-                              <label className="block text-xs font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">Discount (%)</label>
+                              <label htmlFor="product-discount" className="block text-xs font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">Discount (%)</label>
                               <input 
+                                  id="product-discount"
                                   type="number" 
                                   min={0}
                                   max={90}
@@ -817,30 +969,39 @@ const AbelDashboard: React.FC = () => {
                           </div>
 
                           <div>
-                              <label className="block text-xs font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">Price (ETB)</label>
+                              <label htmlFor="product-price" className="block text-xs font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">Price (ETB)</label>
                               <input 
+                                  id="product-price"
                                   type="number" 
+                                  min={1}
+                                  step={1}
                                   required 
                                   className="form-control h-12 font-black text-lg" 
                                   value={newProduct.price}
                                   onChange={e => setNewProduct({...newProduct, price: Number(e.target.value)})}
+                                  onBlur={() => setNewProduct({...newProduct, price: Math.max(1, Number(newProduct.price) || 1)})}
                               />
                           </div>
                           <div>
-                              <label className="block text-xs font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">Stock Level</label>
+                              <label htmlFor="product-stock" className="block text-xs font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">Stock Level</label>
                               <input 
+                                  id="product-stock"
                                   type="number" 
+                                  min={1}
+                                  step={1}
                                   required 
                                   className="form-control h-12 font-bold" 
                                   value={newProduct.stock}
                                   onChange={e => setNewProduct({...newProduct, stock: Number(e.target.value)})}
+                                  onBlur={() => setNewProduct({...newProduct, stock: Math.max(1, Math.floor(Number(newProduct.stock) || 1))})}
                               />
                           </div>
                       </div>
 
                       <div>
-                          <label className="block text-xs font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">Description</label>
+                          <label htmlFor="product-description" className="block text-xs font-black uppercase tracking-widest text-[var(--text-muted)] mb-2">Description</label>
                           <textarea
+                              id="product-description"
                               className="form-control min-h-[110px] font-medium"
                               value={newProduct.description}
                               onChange={e => setNewProduct({...newProduct, description: e.target.value})}
