@@ -53,6 +53,7 @@ const PaymentSuccess: React.FC<PaymentSuccessProps> = ({ onNavigate }) => {
         setIsSuccess(true);
         setAmount(verifiedOrder.totalPrice);
         setMessage('Payment verified successfully. Your order is confirmed.');
+        window.dispatchEvent(new Event('inventory-updated'));
       } catch (err: any) {
         if (!isMounted) return;
         setIsSuccess(false);

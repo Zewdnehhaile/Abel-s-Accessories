@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { RepairStatus, Product, RepairRequest, Order } from '../../types';
-import { DollarSign, PenTool, AlertTriangle, Check, X, Plus, Upload, Trash2, Pencil, Search, ImageOff } from 'lucide-react';
+import { DollarSign, PenTool, AlertTriangle, Check, X, Plus, Upload, Trash2, Pencil, Search, ImageOff, MessageCircle } from 'lucide-react';
 import {
   fetchProducts,
   createProduct,
@@ -13,6 +13,8 @@ import {
 import { fetchRepairs, updateRepairStatus as updateRepairStatusApi } from '../../services/repairService';
 import { fetchProfile, updateProfile } from '../../services/userService';
 import { fetchOrders } from '../../services/orderService';
+import DashboardNotifications from '../../components/DashboardNotifications';
+import { buildDashboardNotifications } from '../../utils/dashboardNotifications';
 
 const PRODUCT_NAME_OPTIONS = [
   'iPhone 15 Pro Max',
@@ -111,66 +113,94 @@ const AbelDashboard: React.FC = () => {
   const [profileError, setProfileError] = useState('');
 
   useEffect(() => {
-    let isMounted = true;
+    const isMountedRef = { current: true };
     setIsLoadingProducts(true);
     setProductError('');
     const storedUser = localStorage.getItem('abel_user');
     const shopId = storedUser ? JSON.parse(storedUser).shopId : undefined;
-    fetchProducts({ shopId })
-      .then(data => {
-        if (isMounted) setProducts(data);
-      })
-      .catch(err => {
-        if (isMounted) setProductError(err?.message || 'Failed to load products.');
-      })
-      .finally(() => {
-        if (isMounted) setIsLoadingProducts(false);
-      });
+    const loadProducts = async () => {
+      try {
+        const data = await fetchProducts({ shopId });
+        if (isMountedRef.current) {
+          setProducts(data);
+          setProductError('');
+        }
+      } catch (err: any) {
+        if (isMountedRef.current) {
+          setProductError(err?.message || 'Failed to load products.');
+        }
+      } finally {
+        if (isMountedRef.current) {
+          setIsLoadingProducts(false);
+        }
+      }
+    };
+
+    loadProducts();
+    const poll = window.setInterval(loadProducts, 15000);
+    const handleInventoryUpdate = () => loadProducts();
+    window.addEventListener('inventory-updated', handleInventoryUpdate);
     return () => {
-      isMounted = false;
+      isMountedRef.current = false;
+      window.clearInterval(poll);
+      window.removeEventListener('inventory-updated', handleInventoryUpdate);
     };
   }, []);
 
   useEffect(() => {
-    let isMounted = true;
+    const isMountedRef = { current: true };
     setIsLoadingRepairs(true);
     setRepairError('');
-    fetchRepairs()
-      .then(data => {
-        if (isMounted) setRepairs(data);
-      })
-      .catch(err => {
-        if (isMounted) setRepairError(err?.message || 'Failed to load repairs.');
-      })
-      .finally(() => {
-        if (isMounted) setIsLoadingRepairs(false);
-      });
+    const loadRepairs = async () => {
+      try {
+        const data = await fetchRepairs();
+        if (isMountedRef.current) {
+          setRepairs(data);
+          setRepairError('');
+        }
+      } catch (err: any) {
+        if (isMountedRef.current) {
+          setRepairError(err?.message || 'Failed to load repairs.');
+        }
+      } finally {
+        if (isMountedRef.current) {
+          setIsLoadingRepairs(false);
+        }
+      }
+    };
+
+    loadRepairs();
+    const poll = window.setInterval(loadRepairs, 20000);
     return () => {
-      isMounted = false;
+      isMountedRef.current = false;
+      window.clearInterval(poll);
     };
   }, []);
 
   useEffect(() => {
-    let isMounted = true;
+    const isMountedRef = { current: true };
 
     const loadOrders = async () => {
       try {
         const data = await fetchOrders();
-        if (!isMounted) return;
+        if (!isMountedRef.current) return;
         setOrders(data);
         setOrderError('');
       } catch (err: any) {
-        if (!isMounted) return;
+        if (!isMountedRef.current) return;
         setOrderError(err?.message || 'Failed to load sales data.');
       }
     };
 
     loadOrders();
     const poll = window.setInterval(loadOrders, 30000);
+    const handleInventoryUpdate = () => loadOrders();
+    window.addEventListener('inventory-updated', handleInventoryUpdate);
 
     return () => {
-      isMounted = false;
+      isMountedRef.current = false;
       window.clearInterval(poll);
+      window.removeEventListener('inventory-updated', handleInventoryUpdate);
     };
   }, []);
 
@@ -342,7 +372,12 @@ const AbelDashboard: React.FC = () => {
         setImageSearchError('No images found. Try a different query.');
       }
     } catch (err: any) {
-      setImageSearchError(err?.message || 'Image search failed.');
+      const message = String(err?.message || 'Image search failed.');
+      setImageSearchError(
+        /google image search/i.test(message)
+          ? 'Image search failed. Please try another query or upload an image.'
+          : message
+      );
     } finally {
       setIsImageSearching(false);
     }
@@ -423,12 +458,35 @@ const AbelDashboard: React.FC = () => {
     r.repairStatus === RepairStatus.READY
   ).length;
   const lowStockCount = products.filter(p => p.stock < 10).length;
+  const dashboardNotifications = useMemo(
+    () => buildDashboardNotifications({ repairs, orders, products }),
+    [repairs, orders, products]
+  );
+  const handleNotificationClick = (item: { id: 'repair' | 'sales' | 'stock' }) => {
+    if (item.id === 'repair') {
+      setActiveView('repairs');
+    } else {
+      setActiveView('products');
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <div className="p-6 max-w-7xl mx-auto min-h-screen">
-      <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-        <h1 className="text-3xl font-black text-[var(--text-main)] tracking-tight">Shop Dashboard</h1>
-        <div className="flex gap-2 bg-[var(--bg-card)] p-1 rounded-xl border border-[var(--border)]">
+      <div className="mb-8 flex flex-col gap-4">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-black text-[var(--text-main)] tracking-tight">Shop Dashboard</h1>
+            <p className="mt-1 text-sm text-[var(--text-muted)]">Keep an eye on repairs, stock, and today’s sales.</p>
+          </div>
+          <DashboardNotifications
+            items={dashboardNotifications}
+            className="self-start md:self-auto"
+            buttonLabel="Shop notifications"
+            onItemClick={handleNotificationClick}
+          />
+        </div>
+        <div className="flex gap-2 bg-[var(--bg-card)] p-1 rounded-xl border border-[var(--border)] w-fit">
             <button 
                 onClick={() => setActiveView('overview')}
                 className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeView === 'overview' ? 'bg-[var(--primary)] text-white shadow-lg' : 'text-[var(--text-muted)] hover:bg-[var(--bg-body)]'}`}
@@ -499,11 +557,12 @@ const AbelDashboard: React.FC = () => {
                   <h3 className="text-xl font-bold text-[var(--text-main)]">Live Repair Queue</h3>
               </div>
               <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm">
-                      <thead className="bg-[var(--bg-body)] text-[var(--text-muted)] uppercase text-[10px] font-black tracking-widest">
+                  <table className="w-full text-left text-base">
+                      <thead className="bg-[var(--bg-body)] text-[var(--text-muted)] uppercase text-sm font-black tracking-widest">
                           <tr>
                               <th className="px-6 py-5">Tracking ID</th>
                               <th className="px-6 py-5">Customer</th>
+                              <th className="px-6 py-5">Telegram</th>
                               <th className="px-6 py-5">Device</th>
                               <th className="px-6 py-5">Status</th>
                               <th className="px-6 py-5">Action</th>
@@ -531,11 +590,25 @@ const AbelDashboard: React.FC = () => {
                                         <div className="text-xs text-[var(--text-muted)]">{repair.phone}</div>
                                     </td>
                                     <td className="px-6 py-5">
+                                      {repair.telegramUsername ? (
+                                        <a
+                                          href={`https://t.me/${repair.telegramUsername.replace(/^@/, '')}`}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          className="text-sm font-bold text-sky-500 hover:underline"
+                                        >
+                                          {repair.telegramUsername}
+                                        </a>
+                                      ) : (
+                                        <span className="text-xs text-[var(--text-muted)]">Not provided</span>
+                                      )}
+                                    </td>
+                                    <td className="px-6 py-5">
                                         <div className="font-medium">{repair.deviceModel}</div>
                                         <div className="text-xs text-[var(--text-muted)] truncate max-w-xs">{repair.issueDescription}</div>
                                     </td>
                                     <td className="px-6 py-5">
-                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter
+                                <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-tighter
                                             ${repair.repairStatus === RepairStatus.COMPLETED ? 'bg-emerald-500/10 text-emerald-500' : 
                                               repair.repairStatus === RepairStatus.RECEIVED ? 'bg-orange-500/10 text-orange-500' :
                                               repair.repairStatus === RepairStatus.IN_PROGRESS ? 'bg-blue-500/10 text-blue-500' :
@@ -547,6 +620,17 @@ const AbelDashboard: React.FC = () => {
                                     </td>
                                     <td className="px-6 py-5">
                                         <div className="flex gap-1">
+                                            {repair.telegramUsername && (
+                                              <a
+                                                href={`https://t.me/${repair.telegramUsername.replace(/^@/, '')}`}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="p-2 hover:bg-sky-500/10 rounded-lg text-sky-500"
+                                                title="Message on Telegram"
+                                              >
+                                                <MessageCircle size={18} />
+                                              </a>
+                                            )}
                                             <button onClick={() => updateRepairStatus(repair.id, RepairStatus.IN_PROGRESS)} className="p-2 hover:bg-blue-500/10 rounded-lg text-blue-500" title="Work in Progress"><PenTool size={18} /></button>
                                             <button onClick={() => updateRepairStatus(repair.id, RepairStatus.READY)} className="p-2 hover:bg-amber-500/10 rounded-lg text-amber-500" title="Ready"><Check size={18} /></button>
                                             <button onClick={() => updateRepairStatus(repair.id, RepairStatus.COMPLETED)} className="p-2 hover:bg-emerald-500/10 rounded-lg text-emerald-500" title="Mark Done"><Check size={18} /></button>
@@ -573,8 +657,8 @@ const AbelDashboard: React.FC = () => {
 
               <div className="card overflow-hidden border-[var(--border)] p-0">
                   <div className="overflow-x-auto">
-                      <table className="w-full text-left text-sm">
-                          <thead className="bg-[var(--bg-body)] text-[var(--text-muted)] uppercase text-[10px] font-black tracking-widest">
+                  <table className="w-full text-left text-base">
+                      <thead className="bg-[var(--bg-body)] text-[var(--text-muted)] uppercase text-sm font-black tracking-widest">
                               <tr>
                                   <th className="px-6 py-5">Item</th>
                                   <th className="px-6 py-5">Category</th>
@@ -624,9 +708,9 @@ const AbelDashboard: React.FC = () => {
                                         <td className="px-6 py-5 text-[var(--text-muted)] font-medium">{product.category}</td>
                                         <td className="px-6 py-5">
                                           {product.condition === 'new' ? (
-                                              <span className="text-emerald-500 font-black text-[10px] px-2 py-0.5 bg-emerald-500/10 rounded-full uppercase">New</span>
+                                              <span className="text-emerald-500 font-black text-xs px-2 py-0.5 bg-emerald-500/10 rounded-full uppercase">New</span>
                                           ) : (
-                                              <span className="text-amber-500 font-black text-[10px] px-2 py-0.5 bg-amber-500/10 rounded-full uppercase">Used</span>
+                                              <span className="text-amber-500 font-black text-xs px-2 py-0.5 bg-amber-500/10 rounded-full uppercase">Used</span>
                                           )}
                                         </td>
                                         <td className="px-6 py-5">
@@ -639,7 +723,7 @@ const AbelDashboard: React.FC = () => {
                                         </td>
                                         <td className="px-6 py-5">
                                           {hasDiscount ? (
-                                            <span className="text-emerald-500 font-black text-[10px] px-2 py-0.5 bg-emerald-500/10 rounded-full uppercase">
+                                            <span className="text-emerald-500 font-black text-xs px-2 py-0.5 bg-emerald-500/10 rounded-full uppercase">
                                               -{product.discountPercent}%
                                             </span>
                                           ) : (
@@ -653,7 +737,7 @@ const AbelDashboard: React.FC = () => {
                                           </div>
                                         </td>
                                         <td className="px-6 py-5">
-                                            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${product.stock > 0 ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>
+                                            <span className={`px-3 py-1 rounded-full text-xs font-black uppercase ${product.stock > 0 ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>
                                                 {product.stock > 0 ? 'Available' : 'Sold Out'}
                                             </span>
                                         </td>
@@ -813,7 +897,7 @@ const AbelDashboard: React.FC = () => {
                                           <Upload size={32} />
                                       </div>
                                       <span className="text-sm font-bold text-[var(--text-main)]">Upload or choose an image</span>
-                                      <span className="text-xs text-[var(--text-muted)]">Use AI Image Search below or upload from your device.</span>
+                                      <span className="text-xs text-[var(--text-muted)]">Use image search below or upload from your device.</span>
                                   </div>
                               )}
                           </div>
@@ -826,14 +910,14 @@ const AbelDashboard: React.FC = () => {
                           />
 
                           <div className="mt-6 space-y-3">
-                            <label htmlFor="product-image-search" className="block text-xs font-black uppercase tracking-widest text-[var(--text-muted)]">AI Image Search</label>
+                            <label htmlFor="product-image-search" className="block text-xs font-black uppercase tracking-widest text-[var(--text-muted)]">Image Search</label>
                             <div className="flex gap-2">
                               <input
                                 id="product-image-search"
                                 type="text"
                                 value={imageQuery}
                                 onChange={(e) => setImageQuery(e.target.value)}
-                                placeholder="Search online images (e.g., iPhone 15 Pro Max)"
+                                placeholder="Search product images (e.g., iPhone 15 Pro Max)"
                                 className="form-control h-12 font-medium flex-1"
                               />
                               <button

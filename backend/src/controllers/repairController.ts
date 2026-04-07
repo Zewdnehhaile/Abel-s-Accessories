@@ -57,6 +57,7 @@ export const createRepair = catchAsync(async (req: any, res: Response, next: Nex
   payload.customerName = payload.customerName || payload.name;
   payload.deviceModel = payload.deviceModel || payload.device;
   payload.issueDescription = payload.issueDescription || payload.description;
+  payload.telegramUsername = payload.telegramUsername || payload.telegram || '';
   payload.serviceType = payload.serviceType || 'general';
   payload.estimatedCost = payload.estimatedCost || 0;
   const paymentInput = payload.paymentStatus || payload.payment;

@@ -1,32 +1,35 @@
-import React, { useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { RepairStatus, RepairRequest } from '../types';
 import { Search, CheckCircle, AlertCircle, Wrench, Battery, Droplets, Cpu } from 'lucide-react';
 import { createRepairRequest, trackRepair } from '../services/repairService';
 
-type PaymentMethod = 'telebirr' | 'cbe' | 'chapa' | 'cash';
+type PaymentMethod = 'chapa' | 'cash';
+
+type RepairService = {
+  id: 'screen' | 'battery' | 'water' | 'logic';
+  title: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string; size?: number }>;
+  accent: string;
+  prompt: string;
+};
 
 const PaymentBadge: React.FC<{ method: PaymentMethod }> = ({ method }) => {
   const logos: Record<PaymentMethod, string | null> = {
-    telebirr: '/telebirr.svg',
-    cbe: '/cbe.svg',
     chapa: '/chapa.svg',
     cash: null
   };
   const fallback: Record<PaymentMethod, string> = {
-    telebirr: 'TB',
-    cbe: 'CBE',
     chapa: 'CH',
     cash: '$'
   };
   const bg: Record<PaymentMethod, string> = {
-    telebirr: 'from-emerald-500 to-green-600',
-    cbe: 'from-blue-500 to-indigo-600',
     chapa: 'from-amber-500 to-orange-500',
     cash: 'from-slate-500 to-slate-700'
   };
   const logo = logos[method];
   return (
-    <span className={`inline-flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br ${bg[method]} text-white text-[10px] font-black overflow-hidden`}>
+    <span className={`inline-flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br ${bg[method]} text-white text-xs font-black overflow-hidden`}>
       {logo ? (
         <img src={logo} alt={`${method} logo`} className="w-6 h-6" />
       ) : (
@@ -42,18 +45,56 @@ const Repair: React.FC = () => {
   const [searchResult, setSearchResult] = useState<RepairRequest | 'not_found' | null>(null);
   const [isTracking, setIsTracking] = useState(false);
   const [trackError, setTrackError] = useState('');
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
 
   // Form State
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
+    telegramUsername: '',
     device: '',
     description: '',
-    payment: 'telebirr'
+    payment: 'chapa'
   });
   const [submittedCode, setSubmittedCode] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [selectedService, setSelectedService] = useState<RepairService['id'] | null>(null);
+
+  const repairServices = useMemo<RepairService[]>(() => ([
+    {
+      id: 'screen',
+      title: 'Screen Repair',
+      description: 'OLED/LCD replacement',
+      icon: Wrench,
+      accent: 'blue',
+      prompt: 'Screen repair request: display, glass, or touch issue.'
+    },
+    {
+      id: 'battery',
+      title: 'Battery Service',
+      description: 'Restore performance',
+      icon: Battery,
+      accent: 'green',
+      prompt: 'Battery service request: battery draining quickly or not holding charge.'
+    },
+    {
+      id: 'water',
+      title: 'Water Damage',
+      description: 'Ultrasonic cleaning',
+      icon: Droplets,
+      accent: 'cyan',
+      prompt: 'Water damage request: the device was exposed to liquid or moisture.'
+    },
+    {
+      id: 'logic',
+      title: 'Logic Board',
+      description: 'Micro-soldering',
+      icon: Cpu,
+      accent: 'purple',
+      prompt: 'Logic board repair request: board-level issue or no power problem.'
+    }
+  ]), []);
 
   const handleTrack = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,15 +121,22 @@ const Repair: React.FC = () => {
     setIsSubmitting(true);
     setSubmitError('');
     try {
+      const service = repairServices.find(item => item.id === selectedService);
+      const finalDescription = service && !formData.description.toLowerCase().includes(service.title.toLowerCase())
+        ? `${service.prompt}\n\n${formData.description}`.trim()
+        : formData.description;
+
       const result = await createRepairRequest({
         name: formData.name,
         phone: formData.phone,
+        telegramUsername: formData.telegramUsername,
         device: formData.device,
-        description: formData.description,
-        payment: formData.payment as 'telebirr' | 'cbe' | 'chapa' | 'cash'
+        description: finalDescription,
+        payment: formData.payment as 'chapa' | 'cash'
       });
       setSubmittedCode(result.trackingCode);
-      setFormData({ name: '', phone: '', device: '', description: '', payment: 'telebirr' });
+      setFormData({ name: '', phone: '', telegramUsername: '', device: '', description: '', payment: 'chapa' });
+      setSelectedService(null);
     } catch (err: any) {
       setSubmitError(err?.message || 'Failed to submit request.');
     } finally {
@@ -129,34 +177,51 @@ const Repair: React.FC = () => {
             <div className="flex flex-col gap-12">
               {/* Services Grid - Horizontal Top */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="card p-6 flex flex-col items-center text-center hover:border-[var(--primary)] transition-colors">
-                      <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center mb-4">
-                          <Wrench className="text-blue-500" size={24} />
-                      </div>
-                      <h3 className="font-bold text-[var(--text-main)] mb-1">Screen Repair</h3>
-                      <p className="text-[var(--text-muted)] text-xs">OLED/LCD replacement</p>
-                  </div>
-                  <div className="card p-6 flex flex-col items-center text-center hover:border-[var(--primary)] transition-colors">
-                      <div className="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center mb-4">
-                          <Battery className="text-green-500" size={24} />
-                      </div>
-                      <h3 className="font-bold text-[var(--text-main)] mb-1">Battery Service</h3>
-                      <p className="text-[var(--text-muted)] text-xs">Restore performance</p>
-                  </div>
-                  <div className="card p-6 flex flex-col items-center text-center hover:border-[var(--primary)] transition-colors">
-                      <div className="w-12 h-12 rounded-full bg-cyan-500/10 flex items-center justify-center mb-4">
-                          <Droplets className="text-cyan-500" size={24} />
-                      </div>
-                      <h3 className="font-bold text-[var(--text-main)] mb-1">Water Damage</h3>
-                      <p className="text-[var(--text-muted)] text-xs">Ultrasonic cleaning</p>
-                  </div>
-                  <div className="card p-6 flex flex-col items-center text-center hover:border-[var(--primary)] transition-colors">
-                      <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center mb-4">
-                          <Cpu className="text-purple-500" size={24} />
-                      </div>
-                      <h3 className="font-bold text-[var(--text-main)] mb-1">Logic Board</h3>
-                      <p className="text-[var(--text-muted)] text-xs">Micro-soldering</p>
-                  </div>
+                  {repairServices.map(service => {
+                    const Icon = service.icon;
+                    const isSelected = selectedService === service.id;
+                    const accentClass = {
+                      blue: 'bg-blue-500/10 text-blue-500',
+                      green: 'bg-green-500/10 text-green-500',
+                      cyan: 'bg-cyan-500/10 text-cyan-500',
+                      purple: 'bg-purple-500/10 text-purple-500'
+                    }[service.accent];
+
+                    return (
+                      <button
+                        key={service.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedService(service.id);
+                          setFormData(prev => ({
+                            ...prev,
+                            description: prev.description.trim().includes(service.prompt)
+                              ? prev.description
+                              : prev.description.trim()
+                                ? `${service.prompt}\n\n${prev.description.trim()}`
+                                : service.prompt
+                          }));
+                          window.setTimeout(() => descriptionRef.current?.focus(), 0);
+                        }}
+                        className={`card p-6 flex flex-col items-center text-center transition-all border-2 ${
+                          isSelected
+                            ? 'border-[var(--primary)] bg-[var(--primary)]/5 shadow-xl scale-[1.02]'
+                            : 'border-transparent hover:border-[var(--primary)]'
+                        }`}
+                      >
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${accentClass}`}>
+                          <Icon size={24} />
+                        </div>
+                        <h3 className="font-bold text-[var(--text-main)] mb-1 text-base">{service.title}</h3>
+                        <p className="text-[var(--text-muted)] text-sm">{service.description}</p>
+                        {isSelected && (
+                          <span className="mt-3 text-xs font-bold uppercase tracking-widest text-[var(--primary)]">
+                            Selected
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
               </div>
 
               {/* Booking Form - Centered & Prominent */}
@@ -193,6 +258,19 @@ const Repair: React.FC = () => {
                                       onChange={e => setFormData({...formData, phone: e.target.value})}
                                   />
                               </div>
+                              <div>
+                                  <label htmlFor="repair-telegram" className="block text-sm font-semibold mb-2 text-[var(--text-main)]">
+                                    Telegram Username
+                                  </label>
+                                  <input 
+                                      id="repair-telegram"
+                                      type="text" 
+                                      className="form-control"
+                                      placeholder="@your_username"
+                                      value={formData.telegramUsername}
+                                      onChange={e => setFormData({...formData, telegramUsername: e.target.value})}
+                                  />
+                              </div>
                           </div>
 
                           <div>
@@ -212,6 +290,7 @@ const Repair: React.FC = () => {
                               <label htmlFor="repair-description" className="block text-sm font-semibold mb-2 text-[var(--text-main)]">Problem Description</label>
                               <textarea 
                                   id="repair-description"
+                                  ref={descriptionRef}
                                   className="form-control bg-[var(--input-bg)]"
                                   rows={4}
                                   placeholder="Briefly describe what's wrong..."
@@ -221,31 +300,24 @@ const Repair: React.FC = () => {
                               ></textarea>
                           </div>
 
+                          {selectedService && (
+                            <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-body)] px-4 py-3 text-sm text-[var(--text-muted)] flex items-center justify-between gap-3">
+                              <span>
+                                Selected service: <strong className="text-[var(--text-main)]">{repairServices.find(s => s.id === selectedService)?.title}</strong>
+                              </span>
+                              <button
+                                type="button"
+                                className="text-[var(--primary)] font-bold"
+                                onClick={() => setSelectedService(null)}
+                              >
+                                Clear
+                              </button>
+                            </div>
+                          )}
+
                           <div>
                               <label className="block text-sm font-semibold mb-3 text-[var(--text-main)]">Preferred Payment</label>
                               <div className="grid grid-cols-2 gap-4">
-                                  <label className={`cursor-pointer border rounded-xl p-4 flex items-center gap-3 transition-all ${formData.payment === 'telebirr' ? 'border-[var(--primary)] bg-[var(--primary)]/5' : 'border-[var(--border)] hover:bg-[var(--bg-body)]'}`}>
-                                      <input type="radio" name="payment" value="telebirr" checked={formData.payment === 'telebirr'} onChange={() => setFormData({...formData, payment: 'telebirr'})} className="hidden" />
-                                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${formData.payment === 'telebirr' ? 'border-[var(--primary)]' : 'border-[var(--text-muted)]'}`}>
-                                          {formData.payment === 'telebirr' && <div className="w-2.5 h-2.5 rounded-full bg-[var(--primary)]" />}
-                                      </div>
-                                      <PaymentBadge method="telebirr" />
-                                      <div>
-                                        <span className="block text-sm font-bold text-[var(--text-main)]">Telebirr (Test)</span>
-                                        <span className="block text-xs text-[var(--text-muted)]">Mobile money checkout</span>
-                                      </div>
-                                  </label>
-                                  <label className={`cursor-pointer border rounded-xl p-4 flex items-center gap-3 transition-all ${formData.payment === 'cbe' ? 'border-[var(--primary)] bg-[var(--primary)]/5' : 'border-[var(--border)] hover:bg-[var(--bg-body)]'}`}>
-                                      <input type="radio" name="payment" value="cbe" checked={formData.payment === 'cbe'} onChange={() => setFormData({...formData, payment: 'cbe'})} className="hidden" />
-                                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${formData.payment === 'cbe' ? 'border-[var(--primary)]' : 'border-[var(--text-muted)]'}`}>
-                                          {formData.payment === 'cbe' && <div className="w-2.5 h-2.5 rounded-full bg-[var(--primary)]" />}
-                                      </div>
-                                      <PaymentBadge method="cbe" />
-                                      <div>
-                                        <span className="block text-sm font-bold text-[var(--text-main)]">CBE (Test)</span>
-                                        <span className="block text-xs text-[var(--text-muted)]">Bank transfer checkout</span>
-                                      </div>
-                                  </label>
                                   <label className={`cursor-pointer border rounded-xl p-4 flex items-center gap-3 transition-all ${formData.payment === 'chapa' ? 'border-[var(--primary)] bg-[var(--primary)]/5' : 'border-[var(--border)] hover:bg-[var(--bg-body)]'}`}>
                                       <input type="radio" name="payment" value="chapa" checked={formData.payment === 'chapa'} onChange={() => setFormData({...formData, payment: 'chapa'})} className="hidden" />
                                       <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${formData.payment === 'chapa' ? 'border-[var(--primary)]' : 'border-[var(--text-muted)]'}`}>

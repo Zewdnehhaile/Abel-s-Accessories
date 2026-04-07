@@ -110,7 +110,7 @@ const ChatWidget: React.FC<{ isOnline: boolean }> = ({ isOnline }) => {
               </div>
               <div>
                 <h3 className="font-bold text-white leading-none">AB Assistant</h3>
-                <span className="text-[10px] text-white/80 flex items-center gap-1 mt-0.5">
+                <span className="text-xs text-white/80 flex items-center gap-1 mt-0.5">
                   <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${isOnline ? 'bg-green-400' : 'bg-gray-400'}`}></span>
                   {isOnline ? 'Online' : 'Offline'}
                 </span>

@@ -159,7 +159,15 @@ export const searchProductImages = async (query: string) => {
   });
 
   if (!res.ok) {
-    await parseApiError(res);
+    try {
+      await parseApiError(res);
+    } catch (error: any) {
+      const message = String(error?.message || '');
+      if (/image search failed/i.test(message) || /no image results found/i.test(message)) {
+        throw new Error('Image search failed. Please try another query or upload an image.');
+      }
+      throw error;
+    }
   }
 
   const data = (await res.json()) as ApiListResponse<string[]>;

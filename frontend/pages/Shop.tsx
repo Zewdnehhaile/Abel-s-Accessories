@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Product } from '../types';
 import { I18N } from '../constants';
 import { Search, ShoppingCart, Filter, ChevronDown, ImageOff } from 'lucide-react';
@@ -21,24 +21,45 @@ const Shop: React.FC<ShopProps> = ({ addToCart, lang, categoryFilter }) => {
   const [conditionFilter, setConditionFilter] = useState<'all' | 'new' | 'used'>('all');
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
+  const loadProducts = useCallback(async (isMountedRef?: { current: boolean }) => {
+    try {
+      const data = await fetchProducts();
+      if (!isMountedRef || isMountedRef.current) {
+        setProducts(data);
+        setLoadError('');
+      }
+    } catch (err: any) {
+      if (!isMountedRef || isMountedRef.current) {
+        setLoadError(err?.message || 'Failed to load products.');
+      }
+    } finally {
+      if (!isMountedRef || isMountedRef.current) {
+        setIsLoading(false);
+      }
+    }
+  }, []);
+
   useEffect(() => {
-    let isMounted = true;
+    const isMountedRef = { current: true };
     setIsLoading(true);
     setLoadError('');
-    fetchProducts()
-      .then(data => {
-        if (isMounted) setProducts(data);
-      })
-      .catch(err => {
-        if (isMounted) setLoadError(err?.message || 'Failed to load products.');
-      })
-      .finally(() => {
-        if (isMounted) setIsLoading(false);
-      });
+    loadProducts(isMountedRef);
+
+    const refresh = () => loadProducts(isMountedRef);
+    const poll = window.setInterval(refresh, 15000);
+    const handleInventoryUpdate = () => refresh();
+    const handleFocus = () => refresh();
+
+    window.addEventListener('inventory-updated', handleInventoryUpdate);
+    window.addEventListener('focus', handleFocus);
+
     return () => {
-      isMounted = false;
+      isMountedRef.current = false;
+      window.clearInterval(poll);
+      window.removeEventListener('inventory-updated', handleInventoryUpdate);
+      window.removeEventListener('focus', handleFocus);
     };
-  }, []);
+  }, [loadProducts]);
 
   useEffect(() => {
     setActiveType('all');
@@ -213,14 +234,14 @@ const Shop: React.FC<ShopProps> = ({ addToCart, lang, categoryFilter }) => {
                         <div className="flex flex-col items-center text-[var(--text-muted)] opacity-50"><ImageOff size={40} /></div>
                       )}
                       <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
-                          <span className="backdrop-blur-md bg-black/60 text-white text-[10px] font-bold px-2 py-1 rounded border border-white/10 uppercase">
+                          <span className="backdrop-blur-md bg-black/60 text-white text-xs font-bold px-2 py-1 rounded border border-white/10 uppercase">
                               {product.category}
                           </span>
                           {product.condition === 'used' && (
-                              <span className="bg-amber-500 text-black text-[10px] font-bold px-2 py-1 rounded uppercase">Used</span>
+                              <span className="bg-amber-500 text-black text-xs font-bold px-2 py-1 rounded uppercase">Used</span>
                           )}
                           {hasDiscount && (
-                              <span className="bg-emerald-500 text-black text-[10px] font-bold px-2 py-1 rounded uppercase">
+                              <span className="bg-emerald-500 text-black text-xs font-bold px-2 py-1 rounded uppercase">
                                 -{product.discountPercent}%
                               </span>
                           )}
@@ -287,14 +308,14 @@ const Shop: React.FC<ShopProps> = ({ addToCart, lang, categoryFilter }) => {
                   <div className="flex flex-col items-center text-[var(--text-muted)] opacity-50"><ImageOff size={40} /></div>
                 )}
                 <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
-                    <span className="backdrop-blur-md bg-black/60 text-white text-[10px] font-bold px-2 py-1 rounded border border-white/10 uppercase">
+                    <span className="backdrop-blur-md bg-black/60 text-white text-xs font-bold px-2 py-1 rounded border border-white/10 uppercase">
                         {product.category}
                     </span>
                     {product.condition === 'used' && (
-                        <span className="bg-amber-500 text-black text-[10px] font-bold px-2 py-1 rounded uppercase">Used</span>
+                        <span className="bg-amber-500 text-black text-xs font-bold px-2 py-1 rounded uppercase">Used</span>
                     )}
                     {hasDiscount && (
-                        <span className="bg-emerald-500 text-black text-[10px] font-bold px-2 py-1 rounded uppercase">
+                        <span className="bg-emerald-500 text-black text-xs font-bold px-2 py-1 rounded uppercase">
                           -{product.discountPercent}%
                         </span>
                     )}

@@ -22,29 +22,33 @@ const About: React.FC<AboutProps> = ({ lang, onNavigate }) => {
 
       {/* Profile Section - Meet Abel */}
       <section className="py-16 bg-gradient-to-b from-[var(--bg-body)] to-[var(--bg-card)] border-b border-[var(--border)] relative z-10">
-          <div className="max-w-[1100px] mx-auto px-[5%]">
+          <div className="max-w-[1280px] mx-auto px-[5%]">
               <div className="card bg-gradient-to-br from-slate-900 to-[var(--bg-card)] border-white/5 p-0 overflow-hidden rounded-[3rem] shadow-2xl flex flex-col md:flex-row items-stretch gap-0">
-                  <div className="w-full md:w-5/12 relative bg-slate-900 min-h-[400px]">
+                  <div className="w-full md:w-6/12 relative bg-slate-900 min-h-[420px]">
                       <img 
                         src={imgError ? FALLBACK_IMAGE : PROFILE_IMAGE} 
                         alt="Abel - Founder & Lead Technician" 
-                        className="w-full h-full object-cover object-center absolute inset-0"
+                        className="w-full h-full object-cover md:object-contain object-center absolute inset-0"
                         onError={() => setImgError(true)}
                       />
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent to-slate-900/20 hidden md:block"></div>
                   </div>
                   
-                  <div className="w-full md:w-7/12 p-8 md:p-12 flex flex-col justify-center">
-                      <div className="inline-flex items-center gap-2 mb-4 text-amber-500 font-bold tracking-[0.2em] uppercase text-[10px]">
-                          <span className="w-6 h-px bg-amber-500/50"></span>
-                          Excellence in Craftsmanship
+                  <div className="w-full md:w-6/12 p-8 md:p-12 flex flex-col justify-center">
+                      <div className="mb-5 flex flex-wrap items-baseline gap-x-4 gap-y-2">
+                          <span className="inline-flex items-center gap-2 text-amber-500 font-bold tracking-[0.2em] uppercase text-[11px] md:text-xs whitespace-nowrap">
+                              <span className="w-6 h-px bg-amber-500/50"></span>
+                              Excellence in Craftsmanship
+                          </span>
+                          <h2 className="text-3xl md:text-4xl xl:text-5xl font-black text-[var(--text-main)] tracking-tighter leading-none whitespace-nowrap">
+                            Abel <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Getachew</span>
+                          </h2>
+                          <h3 className="text-sm md:text-base font-bold text-indigo-400 tracking-wide whitespace-nowrap pb-0.5">
+                            Founder & Lead Technician
+                          </h3>
                       </div>
-                      <h2 className="text-4xl md:text-5xl font-black text-[var(--text-main)] mb-2 tracking-tighter leading-none">
-                        Abel <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Getachew</span>
-                      </h2>
-                      <h3 className="text-lg font-bold text-indigo-400 mb-6 tracking-wide">Founder & Lead Technician</h3>
                       
-                      <div className="text-[var(--text-muted)] text-base md:text-lg mb-8 leading-relaxed font-light space-y-4">
+                      <div className="text-[var(--text-muted)] text-sm md:text-base mb-7 leading-relaxed font-light space-y-4">
                         <p>
                           With years of experience in mobile electronics, Abel has built a trusted name in Dessie through integrity, precision, and consistent quality. Every repair is carried out using reliable parts and accurate diagnostics to ensure lasting performance.
                         </p>
@@ -59,8 +63,8 @@ const About: React.FC<AboutProps> = ({ lang, onNavigate }) => {
                                 <ShieldCheck size={20} />
                               </div>
                               <div>
-                                  <h4 className="font-bold text-[var(--text-main)] text-sm">Premium Parts</h4>
-                                  <p className="text-[var(--text-muted)] text-[10px]">Only A+ Grade components.</p>
+                                  <h4 className="font-bold text-[var(--text-main)] text-base">Premium Parts</h4>
+                                  <p className="text-[var(--text-muted)] text-sm">Only A+ Grade components.</p>
                               </div>
                           </div>
                           <div className="flex gap-3 p-3 rounded-2xl bg-white/5 border border-white/10 transition-colors items-center">
@@ -68,15 +72,15 @@ const About: React.FC<AboutProps> = ({ lang, onNavigate }) => {
                                 <Clock size={20} />
                               </div>
                               <div>
-                                  <h4 className="font-bold text-[var(--text-main)] text-sm">Express Turnaround</h4>
-                                  <p className="text-[var(--text-muted)] text-[10px]">Fastest mobile service.</p>
+                                  <h4 className="font-bold text-[var(--text-main)] text-base">Express Turnaround</h4>
+                                  <p className="text-[var(--text-muted)] text-sm">Fastest mobile service.</p>
                               </div>
                           </div>
                       </div>
 
                       <div className="flex flex-wrap gap-4">
-                         <button onClick={() => onNavigate('repair')} className="btn btn-primary px-8 py-3 text-base shadow-xl shadow-indigo-500/20">Book My Repair</button>
-                         <a href="https://tiktok.com/@babi_abel_19" target="_blank" rel="noopener noreferrer" className="btn btn-outline px-8 py-3 text-base border-white/10">Follow on TikTok</a>
+                         <button onClick={() => onNavigate('repair')} className="btn btn-primary px-8 py-3 text-sm shadow-xl shadow-indigo-500/20">Book My Repair</button>
+                         <a href="https://tiktok.com/@babi_abel_19" target="_blank" rel="noopener noreferrer" className="btn btn-outline px-8 py-3 text-sm border-white/10">Follow on TikTok</a>
                       </div>
                   </div>
               </div>
@@ -135,11 +139,11 @@ const About: React.FC<AboutProps> = ({ lang, onNavigate }) => {
       <section className="py-24 text-center max-w-[1300px] mx-auto px-[5%] border-t border-[var(--border)] relative z-10">
           <div className="relative group overflow-hidden p-16 rounded-[4rem] border border-white/5 bg-gradient-to-br from-slate-900 to-[var(--bg-body)]">
               <div className="absolute top-0 right-0 p-8 text-[var(--primary)] opacity-5"><MapPin size={240} /></div>
-              <h3 className="text-4xl font-black text-[var(--text-main)] mb-6">Our Flagship Store</h3>
-              <p className="text-[var(--text-muted)] text-xl mb-12 max-w-2xl mx-auto font-light leading-relaxed">
+              <h3 className="text-3xl font-black text-[var(--text-main)] mb-5">Our Flagship Store</h3>
+              <p className="text-[var(--text-muted)] text-base md:text-lg mb-10 max-w-2xl mx-auto font-light leading-relaxed">
                 Visit our state-of-the-art repair facility in the heart of <span className="text-white font-bold">Dessie, Ethiopia</span>. 
               </p>
-              <div className="inline-flex items-center gap-4 bg-white/5 border border-white/10 text-white px-10 py-5 rounded-full font-black text-xl shadow-2xl hover:bg-white/10 transition-all">
+              <div className="inline-flex items-center gap-4 bg-white/5 border border-white/10 text-white px-10 py-5 rounded-full font-black text-base md:text-lg shadow-2xl hover:bg-white/10 transition-all">
                   <Globe size={28} className="text-indigo-400" /> Dessie Hub
               </div>
           </div>

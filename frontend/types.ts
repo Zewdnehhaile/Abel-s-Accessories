@@ -49,6 +49,7 @@ export interface RepairRequest {
   trackingCode: string;
   customerName: string;
   phone: string;
+  telegramUsername?: string;
   deviceModel: string;
   issueDescription: string;
   serviceType: string;

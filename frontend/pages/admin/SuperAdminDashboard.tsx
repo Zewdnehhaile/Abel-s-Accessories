@@ -1,14 +1,22 @@
-import React, { useEffect, useState } from 'react';
-import { Log, SalesStat, User } from '../../types';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Log, Order, Product, RepairRequest, SalesStat, User } from '../../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Shield, Users, TrendingUp, Lock, Plus, Pencil, Trash2, UserCircle, X } from 'lucide-react';
 import { fetchLogs, fetchSalesStats, fetchUsers, toggleUserActive, createUser, updateUser, deleteUser, fetchUsageStats } from '../../services/adminService';
 import { fetchProfile, updateProfile } from '../../services/userService';
+import { fetchOrders } from '../../services/orderService';
+import { fetchProducts } from '../../services/productService';
+import { fetchRepairs } from '../../services/repairService';
+import DashboardNotifications from '../../components/DashboardNotifications';
+import { buildDashboardNotifications } from '../../utils/dashboardNotifications';
 
 const SuperAdminDashboard: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [logs, setLogs] = useState<Log[]>([]);
   const [stats, setStats] = useState<SalesStat[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [repairs, setRepairs] = useState<RepairRequest[]>([]);
   const [usage, setUsage] = useState<{ totalUsers: number; activeUsers: number; totalLogins: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -35,32 +43,61 @@ const SuperAdminDashboard: React.FC = () => {
   const [profileError, setProfileError] = useState('');
 
   useEffect(() => {
-    let isMounted = true;
+    const isMountedRef = { current: true };
     setLoading(true);
     setError('');
-    Promise.all([fetchUsers(), fetchLogs(), fetchSalesStats(), fetchUsageStats(), fetchProfile()])
-      .then(([usersData, logsData, statsData, usageData, profileData]) => {
-        if (!isMounted) return;
+    const loadAdminData = async () => {
+      try {
+        const [
+          usersData,
+          logsData,
+          statsData,
+          usageData,
+          profileData,
+          repairsData,
+          ordersData,
+          productsData
+        ] = await Promise.all([
+          fetchUsers(),
+          fetchLogs(),
+          fetchSalesStats(),
+          fetchUsageStats(),
+          fetchProfile(),
+          fetchRepairs(),
+          fetchOrders(),
+          fetchProducts()
+        ]);
+        if (!isMountedRef.current) return;
         setUsers(usersData);
         setLogs(logsData);
         setStats(statsData);
         setUsage(usageData);
+        setRepairs(repairsData);
+        setOrders(ordersData);
+        setProducts(productsData);
         setProfileForm({
           name: profileData.name || '',
           email: profileData.email || '',
           password: '',
           confirmPassword: ''
         });
-      })
-      .catch(err => {
-        if (!isMounted) return;
+        setError('');
+      } catch (err: any) {
+        if (!isMountedRef.current) return;
         setError(err?.message || 'Failed to load admin data.');
-      })
-      .finally(() => {
-        if (isMounted) setLoading(false);
-      });
+      } finally {
+        if (isMountedRef.current) setLoading(false);
+      }
+    };
+
+    loadAdminData();
+    const poll = window.setInterval(loadAdminData, 20000);
+    const handleInventoryUpdate = () => loadAdminData();
+    window.addEventListener('inventory-updated', handleInventoryUpdate);
     return () => {
-      isMounted = false;
+      isMountedRef.current = false;
+      window.clearInterval(poll);
+      window.removeEventListener('inventory-updated', handleInventoryUpdate);
     };
   }, []);
 
@@ -186,10 +223,25 @@ const SuperAdminDashboard: React.FC = () => {
   };
 
   const weeklyTotal = stats.reduce((sum, item) => sum + item.amount, 0);
+  const dashboardNotifications = useMemo(
+    () => buildDashboardNotifications({ repairs, orders, products }),
+    [repairs, orders, products]
+  );
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      <h1 className="text-2xl font-bold text-white mb-8">System Administration</h1>
+      <div className="mb-8 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-white">System Administration</h1>
+          <p className="mt-1 text-sm text-gray-400">Monitor repairs, sales, and stock from one place.</p>
+        </div>
+        <DashboardNotifications
+          items={dashboardNotifications}
+          variant="dark"
+          buttonLabel="System notifications"
+          className="shrink-0"
+        />
+      </div>
 
       {loading && <div className="text-center text-[var(--text-muted)] py-10">Loading admin data...</div>}
       {error && <div className="text-center text-red-500 py-6">{error}</div>}
@@ -201,7 +253,7 @@ const SuperAdminDashboard: React.FC = () => {
               <UserCircle size={22} />
             </div>
             <div>
-              <p className="text-xs uppercase text-gray-400 tracking-widest font-bold">Total Users</p>
+              <p className="text-sm uppercase text-gray-400 tracking-widest font-bold">Total Users</p>
               <p className="text-2xl font-black text-white">{usage.totalUsers}</p>
             </div>
           </div>
@@ -210,7 +262,7 @@ const SuperAdminDashboard: React.FC = () => {
               <Users size={22} />
             </div>
             <div>
-              <p className="text-xs uppercase text-gray-400 tracking-widest font-bold">Active Users</p>
+              <p className="text-sm uppercase text-gray-400 tracking-widest font-bold">Active Users</p>
               <p className="text-2xl font-black text-white">{usage.activeUsers}</p>
             </div>
           </div>
@@ -219,7 +271,7 @@ const SuperAdminDashboard: React.FC = () => {
               <Lock size={22} />
             </div>
             <div>
-              <p className="text-xs uppercase text-gray-400 tracking-widest font-bold">Total Logins</p>
+              <p className="text-sm uppercase text-gray-400 tracking-widest font-bold">Total Logins</p>
               <p className="text-2xl font-black text-white">{usage.totalLogins}</p>
             </div>
           </div>
@@ -247,7 +299,7 @@ const SuperAdminDashboard: React.FC = () => {
             </ResponsiveContainer>
           </div>
           <div className="mt-6 border-t border-dark-700 pt-4">
-            <div className="text-xs uppercase text-gray-400 tracking-widest font-bold mb-3">Weekly Breakdown</div>
+            <div className="text-sm uppercase text-gray-400 tracking-widest font-bold mb-3">Weekly Breakdown</div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead className="text-gray-400 text-[11px] uppercase">
@@ -292,11 +344,11 @@ const SuperAdminDashboard: React.FC = () => {
                       </div>
                       <div>
                         <p className="font-medium text-white">{u.name}</p>
-                        <p className="text-xs text-gray-500">{u.email}</p>
+                        <p className="text-sm text-gray-500">{u.email}</p>
                       </div>
                    </div>
                    <div className="flex items-center gap-2">
-                     <span className="text-xs uppercase bg-dark-800 border border-dark-600 text-gray-300 px-2 py-1 rounded">
+                     <span className="text-sm uppercase bg-dark-800 border border-dark-600 text-gray-300 px-2 py-1 rounded">
                         {u.role.replace('_', ' ')}
                      </span>
                      <span className={`text-xs uppercase px-2 py-1 rounded border ${
@@ -344,12 +396,12 @@ const SuperAdminDashboard: React.FC = () => {
       <div className="bg-dark-800 p-6 rounded-xl border border-dark-700 shadow-xl mb-8">
         <h3 className="text-lg font-bold text-white mb-6">Profile Settings</h3>
         {profileStatus && (
-          <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-sm rounded-lg p-3 mb-4">
+          <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-base rounded-lg p-3 mb-4">
             {profileStatus}
           </div>
         )}
         {profileError && (
-          <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-lg p-3 mb-4">
+          <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-base rounded-lg p-3 mb-4">
             {profileError}
           </div>
         )}
@@ -415,7 +467,7 @@ const SuperAdminDashboard: React.FC = () => {
             <Shield className="text-red-500" /> Security & System Logs
           </h3>
           <div className="flex items-center gap-3">
-            <label className="text-xs uppercase text-gray-400 font-bold tracking-widest">Filter</label>
+            <label className="text-sm uppercase text-gray-400 font-bold tracking-widest">Filter</label>
             <select
               value={selectedLogUser}
               onChange={(e) => handleLogFilterChange(e.target.value)}
@@ -431,7 +483,7 @@ const SuperAdminDashboard: React.FC = () => {
           </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-gray-300">
+          <table className="w-full text-left text-base text-gray-300">
             <thead className="bg-dark-900 text-gray-400 text-xs uppercase">
               <tr>
                 <th className="px-6 py-3">Timestamp</th>
@@ -459,15 +511,15 @@ const SuperAdminDashboard: React.FC = () => {
                     <td className="px-6 py-4 text-gray-500">{log.timestamp}</td>
                     <td className="px-6 py-4">
                       <div className="font-medium text-white">{log.action}</div>
-                      <div className="text-xs text-gray-500">{log.description}</div>
+                      <div className="text-sm text-gray-500">{log.description}</div>
                     </td>
                     <td className="px-6 py-4">
                       <div>{log.user || '-'}</div>
-                      {log.ipAddress && <div className="text-xs text-gray-500">{log.ipAddress}</div>}
-                      {log.location && <div className="text-xs text-gray-500">{log.location}</div>}
+                      {log.ipAddress && <div className="text-sm text-gray-500">{log.ipAddress}</div>}
+                      {log.location && <div className="text-sm text-gray-500">{log.location}</div>}
                     </td>
                     <td className="px-6 py-4">
-                       <span className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full w-fit ${
+                       <span className={`flex items-center gap-1 text-sm px-2 py-1 rounded-full w-fit ${
                          log.type === 'security' ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-blue-500/10 text-blue-500 border border-blue-500/20'
                        }`}>
                          {log.type === 'security' && <Lock size={12} />} {log.type}
@@ -494,14 +546,14 @@ const SuperAdminDashboard: React.FC = () => {
             </div>
 
             {userFormError && (
-              <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-lg p-3 mb-4">
+              <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-base rounded-lg p-3 mb-4">
                 {userFormError}
               </div>
             )}
 
             <form onSubmit={handleSaveUser} className="space-y-4">
               <div>
-                <label htmlFor="user-name" className="block text-xs uppercase text-gray-400 font-bold mb-2">Full Name</label>
+                <label htmlFor="user-name" className="block text-sm uppercase text-gray-400 font-bold mb-2">Full Name</label>
                 <input
                   id="user-name"
                   type="text"
@@ -512,7 +564,7 @@ const SuperAdminDashboard: React.FC = () => {
                 />
               </div>
               <div>
-                <label htmlFor="user-email" className="block text-xs uppercase text-gray-400 font-bold mb-2">Email</label>
+                <label htmlFor="user-email" className="block text-sm uppercase text-gray-400 font-bold mb-2">Email</label>
                 <input
                   id="user-email"
                   type="email"
@@ -523,7 +575,7 @@ const SuperAdminDashboard: React.FC = () => {
                 />
               </div>
               <div>
-                <label htmlFor="user-role" className="block text-xs uppercase text-gray-400 font-bold mb-2">Role</label>
+                <label htmlFor="user-role" className="block text-sm uppercase text-gray-400 font-bold mb-2">Role</label>
                 <select
                   id="user-role"
                   value={userForm.role}
@@ -535,7 +587,7 @@ const SuperAdminDashboard: React.FC = () => {
                 </select>
               </div>
               <div>
-                <label htmlFor="user-password" className="block text-xs uppercase text-gray-400 font-bold mb-2">
+                <label htmlFor="user-password" className="block text-sm uppercase text-gray-400 font-bold mb-2">
                   {editingUser ? 'New Password (optional)' : 'Password'}
                 </label>
                 <input

@@ -206,6 +206,7 @@ const App: React.FC = () => {
       setCheckoutSuccess(true);
       setCart([]);
       setCartNotice('');
+      window.dispatchEvent(new Event('inventory-updated'));
       setTimeout(() => setCheckoutSuccess(false), 3000);
     } catch (err: any) {
       setCheckoutError(err?.message || 'Checkout failed. Please try again.');

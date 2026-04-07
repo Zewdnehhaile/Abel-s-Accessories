@@ -7,6 +7,7 @@ type ApiRepair = {
   trackingCode: string;
   customerName: string;
   phone: string;
+  telegramUsername?: string;
   deviceModel: string;
   issueDescription: string;
   serviceType: string;
@@ -28,6 +29,7 @@ const mapRepair = (repair: ApiRepair): RepairRequest => ({
   trackingCode: repair.trackingCode,
   customerName: repair.customerName,
   phone: repair.phone,
+  telegramUsername: repair.telegramUsername || '',
   deviceModel: repair.deviceModel,
   issueDescription: repair.issueDescription,
   serviceType: repair.serviceType,
@@ -57,6 +59,7 @@ const parseError = async (res: Response) => {
 export const createRepairRequest = async (payload: {
   name: string;
   phone: string;
+  telegramUsername?: string;
   device: string;
   description: string;
   payment: 'telebirr' | 'cbe' | 'chapa' | 'cash';
@@ -67,6 +70,7 @@ export const createRepairRequest = async (payload: {
     body: JSON.stringify({
       customerName: payload.name,
       phone: payload.phone,
+      telegramUsername: payload.telegramUsername?.trim() || '',
       deviceModel: payload.device,
       issueDescription: payload.description,
       paymentStatus: payload.payment === 'cash' ? 'cash' : 'pending',

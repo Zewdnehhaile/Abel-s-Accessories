@@ -4,6 +4,7 @@ export interface IRepair extends Document {
   trackingCode: string;
   customerName: string;
   phone: string;
+  telegramUsername?: string;
   deviceModel: string;
   issueDescription: string;
   serviceType: string;
@@ -19,6 +20,7 @@ const RepairSchema: Schema = new Schema({
   trackingCode: { type: String, required: true, unique: true },
   customerName: { type: String, required: true },
   phone: { type: String, required: true },
+  telegramUsername: { type: String, default: '' },
   deviceModel: { type: String, required: true },
   issueDescription: { type: String, required: true },
   serviceType: { type: String, required: true },

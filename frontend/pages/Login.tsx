@@ -130,7 +130,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onBack }) => {
 
       <div className="max-w-md w-full bg-[var(--bg-card)] rounded-2xl shadow-2xl border border-[var(--border)] p-8 md:p-10 relative z-10">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--bg-body)] border border-[var(--border)] text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--bg-body)] border border-[var(--border)] text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-6">
             Secure Sign In
           </div>
           <div className="w-20 h-20 bg-[var(--bg-body)] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl ring-1 ring-[var(--border)] overflow-hidden">

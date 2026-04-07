@@ -67,7 +67,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout, cartCount, toggleCart, 
              >
                 <ShoppingCart size={24} />
                 {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-2 bg-[var(--primary)] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-lg border border-[var(--bg-body)]">
+                  <span className="absolute -top-1 -right-2 bg-[var(--primary)] text-white text-xs font-bold px-1.5 py-0.5 rounded-full shadow-lg border border-[var(--bg-body)]">
                     {cartCount}
                   </span>
                 )}
@@ -109,7 +109,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout, cartCount, toggleCart, 
              >
                 <ShoppingCart size={24} />
                 {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-2 bg-[var(--primary)] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                  <span className="absolute -top-1 -right-2 bg-[var(--primary)] text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
                     {cartCount}
                   </span>
                 )}

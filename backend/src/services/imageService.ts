@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { AxiosResponse } from 'axios';
 
 const normalize = (value: string) =>
   value
@@ -9,8 +8,7 @@ const normalize = (value: string) =>
     .trim();
 
 const uniqueUrls = (urls: string[]) => Array.from(new Set(urls.filter(Boolean)));
-const GOOGLE_PAGE_STARTS = [1, 11, 21];
-const MAX_IMAGE_RESULTS = 36;
+const MAX_IMAGE_RESULTS = 24;
 
 const getAxiosErrorSummary = (error: unknown) => {
   if (error instanceof Error && error.message) {
@@ -23,36 +21,147 @@ const getAxiosErrorSummary = (error: unknown) => {
 
   const status = error.response?.status;
   const apiMessage =
-    (error.response?.data as any)?.error?.message ||
+    (error.response?.data as any)?.errors?.[0] ||
+    (error.response?.data as any)?.error ||
     error.message ||
     'Request failed';
 
   return status ? `${status} ${apiMessage}` : apiMessage;
 };
 
-const scoreImageMatch = (item: any, tokens: string[], fullQuery: string) => {
-  const title = normalize(item?.title || '');
-  const snippet = normalize(item?.snippet || '');
-  const context = normalize(item?.image?.contextLink || '');
-  const combined = `${title} ${snippet} ${context}`.trim();
+const buildSearchQuery = (query: string) => {
+  const tokens = normalize(query)
+    .split(' ')
+    .filter(token => token.length > 1);
 
-  let score = 0;
-  let tokenHits = 0;
-  for (const token of tokens) {
-    const hasTitle = title.includes(token);
-    const hasSnippet = snippet.includes(token);
-    const hasContext = context.includes(token);
-    if (hasTitle || hasSnippet || hasContext) tokenHits += 1;
-    if (hasTitle) score += 5;
-    if (hasSnippet) score += 3;
-    if (hasContext) score += 1;
+  if (!tokens.length) {
+    return query.trim();
   }
-  if (fullQuery && title.includes(fullQuery)) score += 12;
-  if (fullQuery && snippet.includes(fullQuery)) score += 8;
-  if (fullQuery && combined.includes(fullQuery)) score += 10;
-  if (tokens.length > 0 && tokenHits === tokens.length) score += 20;
 
-  return { score, tokenHits };
+  return tokens.join(' ');
+};
+
+const buildQueryVariants = (query: string) => {
+  const normalized = normalize(query);
+  const tokens = normalized.split(' ').filter(Boolean);
+  const variants = new Set<string>();
+
+  const push = (...values: Array<string | undefined | null>) => {
+    values.forEach(value => {
+      const cleaned = value?.trim();
+      if (cleaned) {
+        variants.add(cleaned);
+      }
+    });
+  };
+
+  const hasCharger = tokens.includes('charger') || tokens.includes('charging');
+  const hasCable = tokens.includes('cable') || tokens.includes('cord') || tokens.includes('wire');
+  const hasPc = tokens.includes('pc') || tokens.includes('computer') || tokens.includes('desktop');
+  const hasLaptop = tokens.includes('laptop') || tokens.includes('notebook');
+  const hasPhone = tokens.includes('phone') || tokens.includes('mobile') || tokens.includes('smartphone');
+
+  const brand = tokens.find(token =>
+    ['hp', 'dell', 'lenovo', 'asus', 'acer', 'samsung', 'apple', 'huawei', 'tecno', 'infinix', 'oppo', 'vivo'].includes(token)
+  );
+
+  if (hasCharger && hasCable) {
+    push(
+      `${brand ? `${brand.toUpperCase()} ` : ''}laptop charger cable`,
+      `${brand ? `${brand.toUpperCase()} ` : ''}charging cable`,
+      'laptop charger cable',
+      'USB-C laptop charger cable',
+      'USB charging cable',
+      'power adapter cable'
+    );
+  }
+
+  if (hasPc || hasLaptop) {
+    push(
+      `${brand ? `${brand.toUpperCase()} ` : ''}laptop charger`,
+      `${brand ? `${brand.toUpperCase()} ` : ''}charging cable`,
+      'laptop power adapter',
+      'laptop charger cable'
+    );
+  }
+
+  if (hasPhone) {
+    push(
+      `${brand ? `${brand.toUpperCase()} ` : ''}phone charger`,
+      'phone charging cable',
+      'USB-C charging cable',
+      'phone power adapter'
+    );
+  }
+
+  if (brand && !hasCharger && !hasCable) {
+    push(`${brand.toUpperCase()} accessory`, `${brand.toUpperCase()} product`);
+  }
+
+  push(query, buildSearchQuery(query));
+
+  return Array.from(variants).slice(0, 8);
+};
+
+const extractOpenverseUrls = (results: any[]) => {
+  return results
+    .map((item: any) => item?.thumbnail || item?.url || item?.image_url || '')
+    .filter(Boolean);
+};
+
+const searchOpenverseImages = async (queries: string[]) => {
+  const links: string[] = [];
+
+  for (const searchQuery of queries) {
+    const response = await axios.get('https://api.openverse.org/v1/images/', {
+      params: {
+        q: searchQuery,
+        page_size: 12
+      },
+      timeout: 7000
+    });
+
+    const results = Array.isArray(response.data?.results) ? response.data.results : [];
+    links.push(...extractOpenverseUrls(results));
+
+    if (links.length >= 6) {
+      break;
+    }
+  }
+
+  return uniqueUrls(links).slice(0, MAX_IMAGE_RESULTS);
+};
+
+const searchUnsplashImages = async (queries: string[], accessKey: string) => {
+  const links: string[] = [];
+
+  for (const searchQuery of queries) {
+    const response = await axios.get('https://api.unsplash.com/search/photos', {
+      params: {
+        query: searchQuery,
+        per_page: 12,
+        orientation: 'squarish',
+        content_filter: 'high'
+      },
+      headers: {
+        Authorization: `Client-ID ${accessKey}`
+      },
+      timeout: 7000
+    });
+
+    const results = Array.isArray(response.data?.results) ? response.data.results : [];
+    const urls = results
+      .map((item: any) => item?.urls?.regular || item?.urls?.small || item?.urls?.thumb || '')
+      .filter(Boolean);
+
+    links.push(...urls);
+
+    if (links.length >= 6) {
+      break;
+    }
+  }
+
+  return uniqueUrls(links).slice(0, MAX_IMAGE_RESULTS);
 };
 
 export const searchProductImages = async (query: string) => {
@@ -62,83 +171,24 @@ export const searchProductImages = async (query: string) => {
   }
 
   try {
-    const googleKey = process.env.GOOGLE_API_KEY;
-    const googleCse = process.env.GOOGLE_CSE_ID;
-    if (!googleKey || !googleCse) {
-      throw new Error('Google image search is not configured.');
+    const queries = buildQueryVariants(trimmedQuery);
+    const openverseLinks = await searchOpenverseImages(queries);
+    if (openverseLinks.length > 0) {
+      return openverseLinks;
     }
 
-    const normalizedQuery = normalize(trimmedQuery);
-    const queryTokens = normalizedQuery.split(' ').filter(token => token.length > 1);
-
-    try {
-      const queryVariants = [
-        `"${trimmedQuery}" product photo`,
-        `"${trimmedQuery}" official image`,
-        `"${trimmedQuery}" front back photo`
-      ];
-
-      const requests: Array<Promise<AxiosResponse<any>>> = queryVariants.flatMap(q =>
-        GOOGLE_PAGE_STARTS.map(start =>
-          axios.get('https://www.googleapis.com/customsearch/v1', {
-            params: {
-              key: googleKey,
-              cx: googleCse,
-              q,
-              exactTerms: trimmedQuery,
-              searchType: 'image',
-              num: 10,
-              start,
-              safe: 'active',
-              imgType: 'photo',
-              imgSize: 'large'
-            },
-            timeout: 5000
-          })
-        )
-      );
-
-      const responses = await Promise.all(requests);
-
-      const items = responses.flatMap(response =>
-        Array.isArray(response.data?.items) ? response.data.items : []
-      );
-
-      const ranked = items
-        .map((item: any) => {
-          const match = scoreImageMatch(item, queryTokens, normalizedQuery);
-          return {
-            url: item.link || item.image?.thumbnailLink || '',
-            score: match.score,
-            tokenHits: match.tokenHits
-          };
-        })
-        .filter((entry: { url: string }) => Boolean(entry.url))
-        .sort((a, b) => {
-          if (b.tokenHits !== a.tokenHits) return b.tokenHits - a.tokenHits;
-          return b.score - a.score;
-        });
-
-      const strictMatches = ranked.filter(entry => queryTokens.length === 0 || entry.tokenHits >= queryTokens.length);
-      const fallbackMatches = ranked.filter(entry => entry.score > 0);
-
-      const links = uniqueUrls([
-        ...strictMatches.map(entry => entry.url),
-        ...fallbackMatches.map(entry => entry.url),
-        ...ranked.map(entry => entry.url)
-      ]).slice(0, MAX_IMAGE_RESULTS);
-
-      if (links.length > 0) {
-        return links;
+    const accessKey = process.env.UNSPLASH_ACCESS_KEY;
+    if (accessKey) {
+      const unsplashLinks = await searchUnsplashImages(queries, accessKey);
+      if (unsplashLinks.length > 0) {
+        return unsplashLinks;
       }
-
-      throw new Error('Google image search returned no matching images.');
-    } catch (googleError) {
-      const summary = getAxiosErrorSummary(googleError);
-      console.warn(`Google image search failed: ${summary}`);
-      throw new Error(`Google image search failed: ${summary}`);
     }
+
+    throw new Error(`No image results found for: ${queries.join(', ')}`);
   } catch (error) {
-    throw new Error(getAxiosErrorSummary(error));
+    const summary = getAxiosErrorSummary(error);
+    console.warn(`Product image search failed: ${summary}`);
+    throw new Error(`Image search failed: ${summary}`);
   }
 };
