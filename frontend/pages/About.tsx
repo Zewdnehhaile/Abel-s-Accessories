@@ -24,11 +24,11 @@ const About: React.FC<AboutProps> = ({ lang, onNavigate }) => {
       <section className="py-10 md:py-12 bg-gradient-to-b from-[var(--bg-body)] to-[var(--bg-card)] border-b border-[var(--border)] relative z-10">
           <div className="max-w-[1120px] mx-auto px-[5%]">
               <div className="card bg-gradient-to-br from-slate-900 to-[var(--bg-card)] border-white/5 p-0 overflow-hidden rounded-[2rem] shadow-2xl flex flex-col md:flex-row items-stretch gap-0">
-                  <div className="w-full md:w-[38%] relative bg-slate-900 min-h-[280px] md:min-h-[360px]">
+                  <div className="w-full md:w-[38%] relative bg-slate-900 min-h-[280px] md:min-h-[360px] p-4">
                       <img 
                         src={imgError ? FALLBACK_IMAGE : PROFILE_IMAGE} 
                         alt="Abel - Founder & Lead Technician" 
-                        className="w-full h-full object-cover md:object-contain object-center absolute inset-0"
+                        className="w-full h-full object-contain object-center"
                         onError={() => setImgError(true)}
                       />
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent to-slate-900/20 hidden md:block"></div>
