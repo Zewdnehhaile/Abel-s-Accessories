@@ -472,7 +472,7 @@ const AbelDashboard: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 min-h-screen">
+    <div className="w-full max-w-none mx-auto px-4 md:px-6 py-6 min-h-screen">
       <div className="mb-8 flex flex-col gap-4">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div>

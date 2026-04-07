@@ -221,7 +221,7 @@ const Shop: React.FC<ShopProps> = ({ addToCart, lang, categoryFilter }) => {
               const isOutOfStock = product.stock <= 0 || product.status === 'out_of_stock';
               const isLowStock = product.stock > 0 && product.stock <= 5;
               return (
-                <div key={`discount-${product.id}`} className="card group flex flex-col justify-between overflow-hidden p-0 border-0 bg-[var(--bg-card)] ring-1 ring-[var(--border)] hover:ring-[var(--primary)] transition-all min-h-[24rem]">
+                <div key={`discount-${product.id}`} className="card group flex flex-col justify-between overflow-hidden p-0 border-0 bg-[var(--bg-card)] ring-1 ring-[var(--border)] hover:ring-[var(--primary)] transition-all min-h-[28rem]">
                   <div className="h-64 md:h-72 relative overflow-hidden bg-[#0F1014] flex items-center justify-center">
                       {!imageErrors[product.id] ? (
                         <img 
@@ -251,7 +251,7 @@ const Shop: React.FC<ShopProps> = ({ addToCart, lang, categoryFilter }) => {
                   <div className="p-4 flex flex-col flex-1">
                       <div className="flex-1">
                           <h3 className="font-bold text-sm md:text-base mb-1 text-[var(--text-main)] line-clamp-2">{product.name}</h3>
-                          <p className="text-[var(--text-muted)] text-xs md:text-sm line-clamp-2 mb-3">{product.description}</p>
+                          <p className="text-[var(--text-muted)] text-xs md:text-sm line-clamp-2 mb-3 min-h-[2.5rem]">{product.description}</p>
                           <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
                             <span className={`${isOutOfStock ? 'text-red-500' : 'text-emerald-500'}`}>
                               {isOutOfStock ? 'Out of stock' : `${product.stock} in stock`}
@@ -269,12 +269,12 @@ const Shop: React.FC<ShopProps> = ({ addToCart, lang, categoryFilter }) => {
                           <button 
                               onClick={() => addToCart(product)}
                               disabled={isOutOfStock}
-                              className="btn btn-primary btn-sm relative overflow-hidden w-12 hover:w-36 px-0 justify-start transition-all duration-300 group/btn text-xs"
+                              className="btn btn-primary btn-sm relative overflow-hidden min-w-12 hover:min-w-36 px-3 justify-start transition-all duration-300 group/btn text-xs"
                           >
                               <span className="absolute inset-0 flex items-center justify-center transition-opacity duration-200 group-hover/btn:opacity-0">
                                   <ShoppingCart size={16} />
                               </span>
-                              <span className="flex items-center gap-2 pl-10 opacity-0 whitespace-nowrap transition-opacity duration-200 group-hover/btn:opacity-100">
+                              <span className="flex items-center gap-2 pl-6 opacity-0 whitespace-nowrap transition-opacity duration-200 group-hover/btn:opacity-100">
                                   <ShoppingCart size={16} /> Add to cart
                               </span>
                           </button>
@@ -295,7 +295,7 @@ const Shop: React.FC<ShopProps> = ({ addToCart, lang, categoryFilter }) => {
           const isOutOfStock = product.stock <= 0 || product.status === 'out_of_stock';
           const isLowStock = product.stock > 0 && product.stock <= 5;
           return (
-          <div key={product.id} className="card group flex flex-col justify-between overflow-hidden p-0 border-0 bg-[var(--bg-card)] ring-1 ring-[var(--border)] hover:ring-[var(--primary)] transition-all min-h-[24rem]">
+          <div key={product.id} className="card group flex flex-col justify-between overflow-hidden p-0 border-0 bg-[var(--bg-card)] ring-1 ring-[var(--border)] hover:ring-[var(--primary)] transition-all min-h-[28rem]">
             <div className="h-64 md:h-72 relative overflow-hidden bg-[#0F1014] flex items-center justify-center">
                 {!imageErrors[product.id] ? (
                   <img 
@@ -325,7 +325,7 @@ const Shop: React.FC<ShopProps> = ({ addToCart, lang, categoryFilter }) => {
             <div className="p-4 flex flex-col flex-1">
                 <div className="flex-1">
                     <h3 className="font-bold text-sm md:text-base mb-1 text-[var(--text-main)] line-clamp-2">{product.name}</h3>
-                    <p className="text-[var(--text-muted)] text-xs md:text-sm line-clamp-2 mb-3">{product.description}</p>
+                    <p className="text-[var(--text-muted)] text-xs md:text-sm line-clamp-2 mb-3 min-h-[2.5rem]">{product.description}</p>
                     <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
                       <span className={`${isOutOfStock ? 'text-red-500' : 'text-emerald-500'}`}>
                         {isOutOfStock ? 'Out of stock' : `${product.stock} in stock`}
@@ -345,12 +345,12 @@ const Shop: React.FC<ShopProps> = ({ addToCart, lang, categoryFilter }) => {
                     <button 
                         onClick={() => addToCart(product)}
                         disabled={isOutOfStock}
-                        className="btn btn-primary btn-sm relative overflow-hidden w-12 hover:w-36 px-0 justify-start transition-all duration-300 group/btn text-xs"
+                        className="btn btn-primary btn-sm relative overflow-hidden min-w-12 hover:min-w-36 px-3 justify-start transition-all duration-300 group/btn text-xs"
                     >
                         <span className="absolute inset-0 flex items-center justify-center transition-opacity duration-200 group-hover/btn:opacity-0">
                             <ShoppingCart size={16} />
                         </span>
-                        <span className="flex items-center gap-2 pl-10 opacity-0 whitespace-nowrap transition-opacity duration-200 group-hover/btn:opacity-100">
+                        <span className="flex items-center gap-2 pl-6 opacity-0 whitespace-nowrap transition-opacity duration-200 group-hover/btn:opacity-100">
                             <ShoppingCart size={16} /> Add to cart
                         </span>
                     </button>
