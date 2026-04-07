@@ -48,8 +48,8 @@ const Home: React.FC<HomeProps> = ({ onNavigate, lang }) => {
       </section>
 
       {/* Meet Abel Section (Instant Trust) */}
-      <section className="max-w-[1180px] mx-auto px-[5%] pt-10 pb-16 relative z-10 w-full">
-         <div className="card bg-gradient-to-br from-slate-900 to-[var(--bg-card)] border-white/5 p-0 overflow-hidden rounded-[3rem] shadow-2xl flex flex-col md:flex-row items-stretch gap-0">
+      <section className="max-w-[1120px] mx-auto px-[5%] pt-10 pb-14 relative z-10 w-full">
+         <div className="card bg-gradient-to-br from-slate-900 to-[var(--bg-card)] border-white/5 p-0 overflow-hidden rounded-[2.5rem] shadow-2xl flex flex-col md:flex-row items-stretch gap-0">
             <div className="w-full md:w-2/5 h-[320px] md:h-[460px] relative bg-slate-900">
                <img 
                 src={imgError ? FALLBACK_IMAGE : PROFILE_IMAGE}
@@ -59,18 +59,18 @@ const Home: React.FC<HomeProps> = ({ onNavigate, lang }) => {
                />
                <div className="absolute inset-0 bg-gradient-to-r from-transparent to-slate-900/10 hidden md:block"></div>
             </div>
-            <div className="w-full md:w-3/5 p-8 md:p-12">
-               <div className="flex items-center gap-2 text-amber-500 font-black text-[10px] uppercase tracking-[0.28em] mb-4">
+            <div className="w-full md:w-3/5 p-6 md:p-8">
+               <div className="flex items-center gap-2 text-amber-500 font-black text-[10px] uppercase tracking-[0.24em] mb-3">
                   <Star size={14} fill="currentColor" />
                   Real Expertise in Dessie
                </div>
-               <h2 className="text-3xl md:text-5xl font-black text-white mb-5 tracking-tighter leading-tight max-w-xl">
+               <h2 className="text-2xl md:text-4xl font-black text-white mb-4 tracking-tighter leading-tight max-w-lg">
                   Expert Care by <span className="text-indigo-400">Abel</span> himself.
                </h2>
-               <p className="text-sm md:text-base text-[var(--text-muted)] mb-6 max-w-xl font-light leading-relaxed">
+               <p className="text-xs md:text-sm text-[var(--text-muted)] mb-5 max-w-lg font-light leading-relaxed">
                   "I started this shop with one goal: to bring world-class mobile service to my hometown. Every accessory is hand-picked, and every repair is handled with precision."
                </p>
-               <button onClick={() => onNavigate('about')} className="flex items-center gap-3 text-white font-semibold text-sm md:text-base group">
+               <button onClick={() => onNavigate('about')} className="inline-flex items-center gap-2 text-white font-semibold text-xs md:text-sm group">
                   Learn more about my process <ArrowRight className="group-hover:translate-x-2 transition-transform" />
                </button>
             </div>
@@ -78,12 +78,12 @@ const Home: React.FC<HomeProps> = ({ onNavigate, lang }) => {
       </section>
 
       {/* Main Features Grid */}
-      <section className="max-w-[1180px] mx-auto px-[5%] pt-4 pb-16 relative z-20 w-full mt-2 md:mt-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <section className="max-w-[1120px] mx-auto px-[5%] pt-4 pb-14 relative z-20 w-full mt-2 md:mt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           
           {/* Card 1: Certified Pre-Owned */}
           <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: '300ms' }}>
-            <div className="card group p-5 text-center flex flex-col items-center animate-float hover:border-[var(--primary)] transition-all duration-500 h-full">
+            <div className="card group p-5 text-center flex flex-col items-center justify-center animate-float hover:border-[var(--primary)] transition-all duration-500 aspect-square">
                <div className="w-14 h-14 rounded-3xl bg-indigo-500/10 flex items-center justify-center text-[var(--primary)] mb-4 group-hover:bg-[var(--primary)] group-hover:text-white transition-all duration-700 shadow-inner">
                   <Smartphone size={24} />
                </div>
@@ -94,7 +94,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate, lang }) => {
 
           {/* Card 2: Express Repair */}
           <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: '450ms' }}>
-            <div className="card group p-5 text-center flex flex-col items-center animate-float hover:border-amber-500 transition-all duration-500 h-full" style={{ animationDelay: '1s' }}>
+            <div className="card group p-5 text-center flex flex-col items-center justify-center animate-float hover:border-amber-500 transition-all duration-500 aspect-square" style={{ animationDelay: '1s' }}>
                <div className="w-14 h-14 rounded-3xl bg-amber-500/10 flex items-center justify-center text-amber-500 mb-4 group-hover:bg-amber-500 group-hover:text-white transition-all duration-700 shadow-inner">
                   <Zap size={24} />
                </div>
@@ -105,7 +105,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate, lang }) => {
 
           {/* Card 3: Fast Delivery */}
           <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: '600ms' }}>
-            <div className="card group p-5 text-center flex flex-col items-center animate-float hover:border-emerald-500 transition-all duration-500 h-full" style={{ animationDelay: '2s' }}>
+            <div className="card group p-5 text-center flex flex-col items-center justify-center animate-float hover:border-emerald-500 transition-all duration-500 aspect-square" style={{ animationDelay: '2s' }}>
                <div className="w-14 h-14 rounded-3xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 mb-4 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-700 shadow-inner">
                   <Truck size={24} />
                </div>
@@ -116,7 +116,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate, lang }) => {
 
           {/* Card 4: Genuine Gear */}
           <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: '750ms' }}>
-            <div className="card group p-5 text-center flex flex-col items-center animate-float hover:border-purple-500 transition-all duration-500 h-full" style={{ animationDelay: '3s' }}>
+            <div className="card group p-5 text-center flex flex-col items-center justify-center animate-float hover:border-purple-500 transition-all duration-500 aspect-square" style={{ animationDelay: '3s' }}>
                <div className="w-14 h-14 rounded-3xl bg-purple-500/10 flex items-center justify-center text-purple-500 mb-4 group-hover:bg-purple-500 group-hover:text-white transition-all duration-700 shadow-inner">
                   <ShieldCheck size={24} />
                </div>
