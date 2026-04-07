@@ -67,6 +67,15 @@ const mapApiToUi = (p: ApiProduct): Product => {
   };
 };
 
+type ProductCacheEntry = {
+  data: Product[];
+  fetchedAt: number;
+  inFlight?: Promise<Product[]>;
+};
+
+const PRODUCT_CACHE_TTL_MS = 12_000;
+const productCache = new Map<string, ProductCacheEntry>();
+
 const getAuthHeaders = () => {
   const token = localStorage.getItem('abel_token');
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -91,7 +100,7 @@ export const getDiscountedPrice = (product: Product) => {
   return Math.max(0, Math.round(finalPrice));
 };
 
-export const fetchProducts = async (options?: { shopId?: string }) => {
+const fetchProductsFromApi = async (options?: { shopId?: string }) => {
   const params = options?.shopId ? `?shopId=${encodeURIComponent(options.shopId)}` : '';
   const res = await fetch(`${API_URL}/api/products${params}`);
   if (!res.ok) {
@@ -99,6 +108,52 @@ export const fetchProducts = async (options?: { shopId?: string }) => {
   }
   const data = (await res.json()) as ApiListResponse<ApiProduct[]>;
   return (data.data || []).map(mapApiToUi);
+};
+
+export const fetchProducts = async (options?: { shopId?: string }) => {
+  const cacheKey = options?.shopId ? `shop:${options.shopId}` : 'all';
+  const now = Date.now();
+  const cached = productCache.get(cacheKey);
+
+  if (cached && now - cached.fetchedAt < PRODUCT_CACHE_TTL_MS && cached.data.length > 0) {
+    return cached.data;
+  }
+
+  if (cached?.inFlight) {
+    return cached.inFlight;
+  }
+
+  const request = fetchProductsFromApi(options)
+    .then(data => {
+      productCache.set(cacheKey, {
+        data,
+        fetchedAt: Date.now()
+      });
+      return data;
+    })
+    .catch(() => {
+      if (cached?.data?.length) {
+        return cached.data;
+      }
+      return [];
+    })
+    .finally(() => {
+      const latest = productCache.get(cacheKey);
+      if (latest?.inFlight) {
+        productCache.set(cacheKey, {
+          data: latest.data,
+          fetchedAt: latest.fetchedAt
+        });
+      }
+    });
+
+  productCache.set(cacheKey, {
+    data: cached?.data ?? [],
+    fetchedAt: cached?.fetchedAt ?? 0,
+    inFlight: request
+  });
+
+  return request;
 };
 
 export const createProduct = async (payload: CreateProductInput) => {

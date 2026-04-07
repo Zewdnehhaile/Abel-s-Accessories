@@ -21,10 +21,10 @@ const About: React.FC<AboutProps> = ({ lang, onNavigate }) => {
       </div>
 
       {/* Profile Section - Meet Abel */}
-      <section className="py-16 bg-gradient-to-b from-[var(--bg-body)] to-[var(--bg-card)] border-b border-[var(--border)] relative z-10">
-          <div className="max-w-[1280px] mx-auto px-[5%]">
-              <div className="card bg-gradient-to-br from-slate-900 to-[var(--bg-card)] border-white/5 p-0 overflow-hidden rounded-[3rem] shadow-2xl flex flex-col md:flex-row items-stretch gap-0">
-                  <div className="w-full md:w-6/12 relative bg-slate-900 min-h-[420px]">
+      <section className="py-12 md:py-14 bg-gradient-to-b from-[var(--bg-body)] to-[var(--bg-card)] border-b border-[var(--border)] relative z-10">
+          <div className="max-w-[1180px] mx-auto px-[5%]">
+              <div className="card bg-gradient-to-br from-slate-900 to-[var(--bg-card)] border-white/5 p-0 overflow-hidden rounded-[2.5rem] shadow-2xl flex flex-col md:flex-row items-stretch gap-0">
+                  <div className="w-full md:w-[42%] relative bg-slate-900 min-h-[320px] md:min-h-[380px]">
                       <img 
                         src={imgError ? FALLBACK_IMAGE : PROFILE_IMAGE} 
                         alt="Abel - Founder & Lead Technician" 
@@ -34,21 +34,21 @@ const About: React.FC<AboutProps> = ({ lang, onNavigate }) => {
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent to-slate-900/20 hidden md:block"></div>
                   </div>
                   
-                  <div className="w-full md:w-6/12 p-8 md:p-12 flex flex-col justify-center">
-                      <div className="mb-5 flex flex-wrap items-baseline gap-x-4 gap-y-2">
-                          <span className="inline-flex items-center gap-2 text-amber-500 font-bold tracking-[0.2em] uppercase text-[11px] md:text-xs whitespace-nowrap">
+                  <div className="w-full md:w-[58%] p-6 md:p-10 flex flex-col justify-center">
+                      <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2">
+                          <span className="inline-flex items-center gap-2 text-amber-500 font-bold tracking-[0.16em] uppercase text-[10px] md:text-[11px] whitespace-nowrap">
                               <span className="w-6 h-px bg-amber-500/50"></span>
                               Excellence in Craftsmanship
                           </span>
-                          <h2 className="text-3xl md:text-4xl xl:text-5xl font-black text-[var(--text-main)] tracking-tighter leading-none whitespace-nowrap">
+                          <h2 className="text-2xl md:text-3xl xl:text-4xl font-black text-[var(--text-main)] tracking-tighter leading-none whitespace-nowrap">
                             Abel <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Getachew</span>
                           </h2>
-                          <h3 className="text-sm md:text-base font-bold text-indigo-400 tracking-wide whitespace-nowrap pb-0.5">
+                          <h3 className="text-xs md:text-sm font-bold text-indigo-400 tracking-wide whitespace-nowrap pb-0.5">
                             Founder & Lead Technician
                           </h3>
                       </div>
                       
-                      <div className="text-[var(--text-muted)] text-sm md:text-base mb-7 leading-relaxed font-light space-y-4">
+                      <div className="text-[var(--text-muted)] text-sm mb-6 leading-relaxed font-light space-y-3 max-w-2xl">
                         <p>
                           With years of experience in mobile electronics, Abel has built a trusted name in Dessie through integrity, precision, and consistent quality. Every repair is carried out using reliable parts and accurate diagnostics to ensure lasting performance.
                         </p>
@@ -57,30 +57,30 @@ const About: React.FC<AboutProps> = ({ lang, onNavigate }) => {
                         </p>
                       </div>
                       
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
                           <div className="flex gap-3 p-3 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors items-center">
-                              <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-[var(--primary)] shrink-0 shadow-inner">
-                                <ShieldCheck size={20} />
+                              <div className="w-9 h-9 rounded-xl bg-indigo-500/10 flex items-center justify-center text-[var(--primary)] shrink-0 shadow-inner">
+                                <ShieldCheck size={18} />
                               </div>
                               <div>
-                                  <h4 className="font-bold text-[var(--text-main)] text-base">Premium Parts</h4>
+                                  <h4 className="font-bold text-[var(--text-main)] text-sm md:text-base">Premium Parts</h4>
                                   <p className="text-[var(--text-muted)] text-sm">Only A+ Grade components.</p>
                               </div>
                           </div>
                           <div className="flex gap-3 p-3 rounded-2xl bg-white/5 border border-white/10 transition-colors items-center">
-                              <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 shrink-0 shadow-inner">
-                                <Clock size={20} />
+                              <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 shrink-0 shadow-inner">
+                                <Clock size={18} />
                               </div>
                               <div>
-                                  <h4 className="font-bold text-[var(--text-main)] text-base">Express Turnaround</h4>
+                                  <h4 className="font-bold text-[var(--text-main)] text-sm md:text-base">Express Turnaround</h4>
                                   <p className="text-[var(--text-muted)] text-sm">Fastest mobile service.</p>
                               </div>
                           </div>
                       </div>
 
-                      <div className="flex flex-wrap gap-4">
-                         <button onClick={() => onNavigate('repair')} className="btn btn-primary px-8 py-3 text-sm shadow-xl shadow-indigo-500/20">Book My Repair</button>
-                         <a href="https://tiktok.com/@babi_abel_19" target="_blank" rel="noopener noreferrer" className="btn btn-outline px-8 py-3 text-sm border-white/10">Follow on TikTok</a>
+                      <div className="flex flex-wrap gap-3">
+                         <button onClick={() => onNavigate('repair')} className="btn btn-primary px-6 py-2.5 text-xs md:text-sm shadow-xl shadow-indigo-500/20">Book My Repair</button>
+                         <a href="https://tiktok.com/@babi_abel_19" target="_blank" rel="noopener noreferrer" className="btn btn-outline px-6 py-2.5 text-xs md:text-sm border-white/10">Follow on TikTok</a>
                       </div>
                   </div>
               </div>
@@ -88,63 +88,63 @@ const About: React.FC<AboutProps> = ({ lang, onNavigate }) => {
       </section>
 
       {/* Direct Support Section */}
-      <section className="py-24 px-[5%] max-w-[1300px] mx-auto relative z-10">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-black text-[var(--text-main)] mb-4 tracking-tight">Direct Support</h2>
-            <p className="text-[var(--text-muted)] max-w-md mx-auto">Skip the line. Message Abel directly for urgent tech support.</p>
+      <section className="py-16 px-[5%] max-w-[1180px] mx-auto relative z-10">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-black text-[var(--text-main)] mb-4 tracking-tight">Direct Support</h2>
+            <p className="text-[var(--text-muted)] max-w-md mx-auto text-sm md:text-base">Skip the line. Message Abel directly for urgent tech support.</p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {/* Phone Card */}
-              <div className="card group p-10 flex flex-col items-center text-center hover:border-indigo-500 transition-all bg-white/[0.02] backdrop-blur-xl">
-                  <div className="w-20 h-20 rounded-[2.5rem] bg-indigo-500/10 flex items-center justify-center text-[var(--primary)] mb-8 group-hover:bg-[var(--primary)] group-hover:text-white transition-all duration-500 group-hover:rotate-6 shadow-inner">
-                      <Phone size={36} />
+              <div className="card group p-7 flex flex-col items-center text-center hover:border-indigo-500 transition-all bg-white/[0.02] backdrop-blur-xl">
+                  <div className="w-16 h-16 rounded-[2rem] bg-indigo-500/10 flex items-center justify-center text-[var(--primary)] mb-5 group-hover:bg-[var(--primary)] group-hover:text-white transition-all duration-500 group-hover:rotate-6 shadow-inner">
+                      <Phone size={28} />
                   </div>
-                  <h3 className="text-2xl font-bold text-[var(--text-main)] mb-3">Direct Call</h3>
+                  <h3 className="text-xl font-bold text-[var(--text-main)] mb-2">Direct Call</h3>
                   <div className="space-y-2">
-                    <a href="tel:0921275611" className="block text-xl font-black text-[var(--text-main)] hover:text-[var(--primary)] transition-colors">0921 27 56 11</a>
-                    <a href="tel:0910531611" className="block text-xl font-black text-[var(--text-main)] hover:text-[var(--primary)] transition-colors">0910 53 16 11</a>
+                    <a href="tel:0921275611" className="block text-lg font-black text-[var(--text-main)] hover:text-[var(--primary)] transition-colors">0921 27 56 11</a>
+                    <a href="tel:0910531611" className="block text-lg font-black text-[var(--text-main)] hover:text-[var(--primary)] transition-colors">0910 53 16 11</a>
                   </div>
               </div>
 
               {/* Telegram Card */}
-              <a href="https://t.me/abel_ab19" target="_blank" rel="noopener noreferrer" className="card group p-10 flex flex-col items-center text-center hover:border-sky-500 transition-all bg-white/[0.02] backdrop-blur-xl">
-                  <div className="w-20 h-20 rounded-[2.5rem] bg-sky-500/10 flex items-center justify-center text-sky-500 mb-8 group-hover:bg-sky-500 group-hover:text-white transition-all duration-500 group-hover:-rotate-6 shadow-inner">
-                      <Send size={36} />
+              <a href="https://t.me/abel_ab19" target="_blank" rel="noopener noreferrer" className="card group p-7 flex flex-col items-center text-center hover:border-sky-500 transition-all bg-white/[0.02] backdrop-blur-xl">
+                  <div className="w-16 h-16 rounded-[2rem] bg-sky-500/10 flex items-center justify-center text-sky-500 mb-5 group-hover:bg-sky-500 group-hover:text-white transition-all duration-500 group-hover:-rotate-6 shadow-inner">
+                      <Send size={28} />
                   </div>
-                  <h3 className="text-2xl font-bold text-[var(--text-main)] mb-3">Telegram Chat</h3>
-                  <p className="text-sky-500 font-black text-xl tracking-tight">@abel_ab19</p>
+                  <h3 className="text-xl font-bold text-[var(--text-main)] mb-2">Telegram Chat</h3>
+                  <p className="text-sky-500 font-black text-lg tracking-tight">@abel_ab19</p>
               </a>
 
               {/* TikTok Card */}
-              <a href="https://tiktok.com/@babi_abel_19" target="_blank" rel="noopener noreferrer" className="card group p-10 flex flex-col items-center text-center hover:border-pink-500 transition-all bg-white/[0.02] backdrop-blur-xl">
-                  <div className="w-20 h-20 rounded-[2.5rem] bg-pink-500/10 flex items-center justify-center text-pink-500 mb-8 group-hover:bg-pink-500 group-hover:text-white transition-all duration-500 group-hover:rotate-6 shadow-inner">
+              <a href="https://tiktok.com/@babi_abel_19" target="_blank" rel="noopener noreferrer" className="card group p-7 flex flex-col items-center text-center hover:border-pink-500 transition-all bg-white/[0.02] backdrop-blur-xl">
+                  <div className="w-16 h-16 rounded-[2rem] bg-pink-500/10 flex items-center justify-center text-pink-500 mb-5 group-hover:bg-pink-500 group-hover:text-white transition-all duration-500 group-hover:rotate-6 shadow-inner">
                        <svg 
                         viewBox="0 0 24 24" 
                         fill="currentColor" 
-                        width="36" 
-                        height="36"
+                        width="28" 
+                        height="28"
                         className="text-current"
                       >
                         <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
                       </svg>
                   </div>
-                  <h3 className="text-2xl font-bold text-[var(--text-main)] mb-3">TikTok Daily</h3>
-                  <p className="text-pink-500 font-black text-xl tracking-tight">@babi_abel_19</p>
+                  <h3 className="text-xl font-bold text-[var(--text-main)] mb-2">TikTok Daily</h3>
+                  <p className="text-pink-500 font-black text-lg tracking-tight">@babi_abel_19</p>
               </a>
           </div>
       </section>
 
       {/* Location Section */}
-      <section className="py-24 text-center max-w-[1300px] mx-auto px-[5%] border-t border-[var(--border)] relative z-10">
-          <div className="relative group overflow-hidden p-16 rounded-[4rem] border border-white/5 bg-gradient-to-br from-slate-900 to-[var(--bg-body)]">
-              <div className="absolute top-0 right-0 p-8 text-[var(--primary)] opacity-5"><MapPin size={240} /></div>
-              <h3 className="text-3xl font-black text-[var(--text-main)] mb-5">Our Flagship Store</h3>
-              <p className="text-[var(--text-muted)] text-base md:text-lg mb-10 max-w-2xl mx-auto font-light leading-relaxed">
+      <section className="py-16 text-center max-w-[1180px] mx-auto px-[5%] border-t border-[var(--border)] relative z-10">
+          <div className="relative group overflow-hidden p-10 md:p-12 rounded-[3rem] border border-white/5 bg-gradient-to-br from-slate-900 to-[var(--bg-body)]">
+              <div className="absolute top-0 right-0 p-6 text-[var(--primary)] opacity-5"><MapPin size={180} /></div>
+              <h3 className="text-2xl md:text-3xl font-black text-[var(--text-main)] mb-4">Our Flagship Store</h3>
+              <p className="text-[var(--text-muted)] text-sm md:text-base mb-8 max-w-2xl mx-auto font-light leading-relaxed">
                 Visit our state-of-the-art repair facility in the heart of <span className="text-white font-bold">Dessie, Ethiopia</span>. 
               </p>
-              <div className="inline-flex items-center gap-4 bg-white/5 border border-white/10 text-white px-10 py-5 rounded-full font-black text-base md:text-lg shadow-2xl hover:bg-white/10 transition-all">
-                  <Globe size={28} className="text-indigo-400" /> Dessie Hub
+              <div className="inline-flex items-center gap-3 bg-white/5 border border-white/10 text-white px-6 py-3 rounded-full font-black text-sm md:text-base shadow-2xl hover:bg-white/10 transition-all">
+                  <Globe size={22} className="text-indigo-400" /> Dessie Hub
               </div>
           </div>
       </section>
