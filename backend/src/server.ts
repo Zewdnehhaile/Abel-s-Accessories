@@ -43,7 +43,9 @@ const startServer = async () => {
   if (nodeEnv === 'development') {
     app.use(morgan('dev'));
   }
-
+ app.get('/', (req, res) => {
+  res.send('Abel Accessories API is running 🚀');
+});
   // Routes
   app.use('/api/auth', authRoutes);
   app.use('/api/products', productRoutes);
@@ -52,9 +54,7 @@ const startServer = async () => {
   app.use('/api/admin', adminRoutes);
   app.use('/api/ai', aiRoutes);
   app.use('/api/users', userRoutes);
-   app.get('/', (req, res) => {
-  res.send('Abel Accessories API is running 🚀');
-});
+  
   // Error Handler
   app.use(errorHandler);
 
