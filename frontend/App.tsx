@@ -270,10 +270,8 @@ const App: React.FC = () => {
         </div>
       )}
       
-      <main className={!isAuthPage ? "pt-0" : "h-screen"}>
-        <div className={!isAuthPage ? "max-w-5xl mx-auto p-4 w-full" : "h-full w-full"}>
-          {renderContent()}
-        </div>
+      <main className={isAuthPage ? "h-screen text-base md:text-lg" : "text-base md:text-lg max-w-4xl mx-auto p-6"}>
+        {renderContent()}
       </main>
 
       {!isAuthPage && (
