@@ -229,7 +229,7 @@ const SuperAdminDashboard: React.FC = () => {
   );
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="max-w-5xl mx-auto p-4">
       <div className="mb-8 flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white">System Administration</h1>
@@ -280,13 +280,13 @@ const SuperAdminDashboard: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         {/* Analytics Chart */}
-        <div className="bg-dark-800 p-6 rounded-xl border border-dark-700 shadow-xl">
+        <div className="bg-dark-800 p-4 md:p-6 rounded-xl border border-dark-700 shadow-xl">
           <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
             <TrendingUp className="text-brand-500" /> Weekly Revenue
           </h3>
-          <div className="h-80 w-full">
+          <div className="w-full h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={stats} width={500} height={300}>
+              <BarChart data={stats}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                 <XAxis dataKey="date" stroke="#94a3b8" />
                 <YAxis stroke="#94a3b8" />
@@ -326,7 +326,7 @@ const SuperAdminDashboard: React.FC = () => {
         </div>
 
         {/* User Management */}
-        <div className="bg-dark-800 p-6 rounded-xl border border-dark-700 shadow-xl">
+        <div className="bg-dark-800 p-4 md:p-6 rounded-xl border border-dark-700 shadow-xl">
            <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
                 <Users className="text-blue-500" /> User Accounts
@@ -393,7 +393,7 @@ const SuperAdminDashboard: React.FC = () => {
       </div>
 
       {/* Profile Settings */}
-      <div className="bg-dark-800 p-6 rounded-xl border border-dark-700 shadow-xl mb-8">
+      <div className="bg-dark-800 p-4 md:p-6 rounded-xl border border-dark-700 shadow-xl mb-8">
         <h3 className="text-lg font-bold text-white mb-6">Profile Settings</h3>
         {profileStatus && (
           <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-base rounded-lg p-3 mb-4">

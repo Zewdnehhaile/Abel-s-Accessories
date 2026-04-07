@@ -1,6 +1,5 @@
 import { CartItem, Order } from '../types';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_URL } from '../config/api';
 
 type ApiResponse<T> = {
   success: boolean;
@@ -76,7 +75,7 @@ export const createOrder = async (payload: {
     quantity: item.quantity
   }));
 
-  const res = await fetch(`${API_BASE}/api/orders`, {
+  const res = await fetch(`${API_URL}/api/orders`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -103,7 +102,7 @@ export const createOrder = async (payload: {
 };
 
 export const verifyOrderPayment = async (txRef: string) => {
-  const res = await fetch(`${API_BASE}/api/orders/verify-payment`, {
+  const res = await fetch(`${API_URL}/api/orders/verify-payment`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -121,7 +120,7 @@ export const verifyOrderPayment = async (txRef: string) => {
 };
 
 export const fetchOrders = async () => {
-  const res = await fetch(`${API_BASE}/api/orders`, {
+  const res = await fetch(`${API_URL}/api/orders`, {
     headers: {
       ...getAuthHeaders()
     }

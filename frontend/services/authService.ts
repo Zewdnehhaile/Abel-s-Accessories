@@ -1,6 +1,5 @@
 import { User } from '../types';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_URL } from '../config/api';
 
 type LoginResponse = {
   success: boolean;
@@ -24,7 +23,7 @@ type ResetResponse = {
 };
 
 export const login = async (email: string, password: string): Promise<User> => {
-  const res = await fetch(`${API_BASE}/api/auth/login`, {
+  const res = await fetch(`${API_URL}/api/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password })
@@ -60,7 +59,7 @@ export const logout = () => {
 };
 
 export const requestPasswordReset = async (email: string) => {
-  const res = await fetch(`${API_BASE}/api/auth/forgot-password`, {
+  const res = await fetch(`${API_URL}/api/auth/forgot-password`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email })
@@ -80,7 +79,7 @@ export const requestPasswordReset = async (email: string) => {
 };
 
 export const resetPassword = async (token: string, password: string) => {
-  const res = await fetch(`${API_BASE}/api/auth/reset-password`, {
+  const res = await fetch(`${API_URL}/api/auth/reset-password`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ token, password })

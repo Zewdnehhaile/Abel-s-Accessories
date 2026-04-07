@@ -1,6 +1,5 @@
 import { Product } from '../types';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_URL } from '../config/api';
 
 export type ApiProduct = {
   _id: string;
@@ -94,7 +93,7 @@ export const getDiscountedPrice = (product: Product) => {
 
 export const fetchProducts = async (options?: { shopId?: string }) => {
   const params = options?.shopId ? `?shopId=${encodeURIComponent(options.shopId)}` : '';
-  const res = await fetch(`${API_BASE}/api/products${params}`);
+  const res = await fetch(`${API_URL}/api/products${params}`);
   if (!res.ok) {
     await parseApiError(res);
   }
@@ -103,7 +102,7 @@ export const fetchProducts = async (options?: { shopId?: string }) => {
 };
 
 export const createProduct = async (payload: CreateProductInput) => {
-  const res = await fetch(`${API_BASE}/api/products`, {
+  const res = await fetch(`${API_URL}/api/products`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -121,7 +120,7 @@ export const createProduct = async (payload: CreateProductInput) => {
 };
 
 export const updateProduct = async (id: string, payload: Partial<CreateProductInput>) => {
-  const res = await fetch(`${API_BASE}/api/products/${id}`, {
+  const res = await fetch(`${API_URL}/api/products/${id}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -139,7 +138,7 @@ export const updateProduct = async (id: string, payload: Partial<CreateProductIn
 };
 
 export const deleteProduct = async (id: string) => {
-  const res = await fetch(`${API_BASE}/api/products/${id}`, {
+  const res = await fetch(`${API_URL}/api/products/${id}`, {
     method: 'DELETE',
     headers: {
       ...getAuthHeaders()
@@ -152,7 +151,7 @@ export const deleteProduct = async (id: string) => {
 };
 
 export const searchProductImages = async (query: string) => {
-  const res = await fetch(`${API_BASE}/api/products/search-images?query=${encodeURIComponent(query)}`, {
+  const res = await fetch(`${API_URL}/api/products/search-images?query=${encodeURIComponent(query)}`, {
     headers: {
       ...getAuthHeaders()
     }

@@ -1,6 +1,5 @@
 import { RepairRequest, RepairStatus } from '../types';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_URL } from '../config/api';
 
 type ApiRepair = {
   _id: string;
@@ -64,7 +63,7 @@ export const createRepairRequest = async (payload: {
   description: string;
   payment: 'telebirr' | 'cbe' | 'chapa' | 'cash';
 }) => {
-  const res = await fetch(`${API_BASE}/api/repairs`, {
+  const res = await fetch(`${API_URL}/api/repairs`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -89,7 +88,7 @@ export const createRepairRequest = async (payload: {
 };
 
 export const trackRepair = async (code: string) => {
-  const res = await fetch(`${API_BASE}/api/repairs/track/${encodeURIComponent(code)}`);
+  const res = await fetch(`${API_URL}/api/repairs/track/${encodeURIComponent(code)}`);
   if (!res.ok) {
     await parseError(res);
   }
@@ -98,7 +97,7 @@ export const trackRepair = async (code: string) => {
 };
 
 export const fetchRepairs = async () => {
-  const res = await fetch(`${API_BASE}/api/repairs`, {
+  const res = await fetch(`${API_URL}/api/repairs`, {
     headers: {
       ...getAuthHeaders()
     }
@@ -111,7 +110,7 @@ export const fetchRepairs = async () => {
 };
 
 export const updateRepairStatus = async (id: string, status: RepairStatus) => {
-  const res = await fetch(`${API_BASE}/api/repairs/${id}/status`, {
+  const res = await fetch(`${API_URL}/api/repairs/${id}/status`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',

@@ -1,6 +1,5 @@
 import { Log, SalesStat, User } from '../types';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_URL } from '../config/api';
 
 type ApiResponse<T> = {
   success: boolean;
@@ -54,7 +53,7 @@ const parseError = async (res: Response) => {
 };
 
 export const fetchUsers = async () => {
-  const res = await fetch(`${API_BASE}/api/admin/users`, {
+  const res = await fetch(`${API_URL}/api/admin/users`, {
     headers: { ...getAuthHeaders() }
   });
   if (!res.ok) {
@@ -78,7 +77,7 @@ export const createUser = async (payload: {
   role: User['role'];
   shopId?: string;
 }) => {
-  const res = await fetch(`${API_BASE}/api/admin/users`, {
+  const res = await fetch(`${API_URL}/api/admin/users`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -101,7 +100,7 @@ export const updateUser = async (id: string, payload: Partial<{
   isActive: boolean;
   shopId?: string;
 }>) => {
-  const res = await fetch(`${API_BASE}/api/admin/users/${id}`, {
+  const res = await fetch(`${API_URL}/api/admin/users/${id}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -117,7 +116,7 @@ export const updateUser = async (id: string, payload: Partial<{
 };
 
 export const deleteUser = async (id: string) => {
-  const res = await fetch(`${API_BASE}/api/admin/users/${id}`, {
+  const res = await fetch(`${API_URL}/api/admin/users/${id}`, {
     method: 'DELETE',
     headers: {
       ...getAuthHeaders()
@@ -129,7 +128,7 @@ export const deleteUser = async (id: string) => {
 };
 
 export const toggleUserActive = async (id: string) => {
-  const res = await fetch(`${API_BASE}/api/admin/users/${id}/active`, {
+  const res = await fetch(`${API_URL}/api/admin/users/${id}/active`, {
     method: 'PATCH',
     headers: { ...getAuthHeaders() }
   });
@@ -142,7 +141,7 @@ export const toggleUserActive = async (id: string) => {
 
 export const fetchLogs = async (userId?: string) => {
   const query = userId ? `?userId=${encodeURIComponent(userId)}` : '';
-  const res = await fetch(`${API_BASE}/api/admin/logs${query}`, {
+  const res = await fetch(`${API_URL}/api/admin/logs${query}`, {
     headers: { ...getAuthHeaders() }
   });
   if (!res.ok) {
@@ -167,7 +166,7 @@ export const fetchLogs = async (userId?: string) => {
 };
 
 export const fetchSalesStats = async () => {
-  const res = await fetch(`${API_BASE}/api/admin/sales-stats`, {
+  const res = await fetch(`${API_URL}/api/admin/sales-stats`, {
     headers: { ...getAuthHeaders() }
   });
   if (!res.ok) {
@@ -178,7 +177,7 @@ export const fetchSalesStats = async () => {
 };
 
 export const fetchUsageStats = async () => {
-  const res = await fetch(`${API_BASE}/api/admin/usage`, {
+  const res = await fetch(`${API_URL}/api/admin/usage`, {
     headers: { ...getAuthHeaders() }
   });
   if (!res.ok) {

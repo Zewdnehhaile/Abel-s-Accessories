@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_URL } from '../config/api';
 
 export type ChatMessage = { role: 'user' | 'model'; text: string };
 
@@ -26,7 +26,7 @@ export const sendMessageToGemini = async (
   history: ChatMessage[],
   catalog?: string
 ) => {
-  const res = await fetch(`${API_BASE}/api/ai/chat`, {
+  const res = await fetch(`${API_URL}/api/ai/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

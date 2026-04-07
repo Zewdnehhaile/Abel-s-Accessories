@@ -1,6 +1,5 @@
 import { User } from '../types';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_URL } from '../config/api';
 
 type ApiResponse<T> = {
   success: boolean;
@@ -45,7 +44,7 @@ const mapUser = (user: ApiUser): User => ({
 });
 
 export const fetchProfile = async () => {
-  const res = await fetch(`${API_BASE}/api/users/me`, {
+  const res = await fetch(`${API_URL}/api/users/me`, {
     headers: { ...getAuthHeaders() }
   });
   if (!res.ok) {
@@ -60,7 +59,7 @@ export const updateProfile = async (payload: {
   email?: string;
   password?: string;
 }) => {
-  const res = await fetch(`${API_BASE}/api/users/me`, {
+  const res = await fetch(`${API_URL}/api/users/me`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',

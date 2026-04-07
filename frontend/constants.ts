@@ -1,7 +1,7 @@
 import { Product, RepairRequest, Log, RepairStatus, UserRole, User, SalesStat } from './types';
 
 // Path to the image you uploaded to the public folder
-export const PROFILE_IMAGE = '/public/abel_profile.jpg';
+export const PROFILE_IMAGE = '/abel_profile.jpg';
 
 // Fallback image (Professional placeholder) in case the local image fails to load
 export const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?q=80&w=800&auto=format&fit=crop'; 
