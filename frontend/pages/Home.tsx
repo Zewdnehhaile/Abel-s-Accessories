@@ -23,25 +23,25 @@ const Home: React.FC<HomeProps> = ({ onNavigate, lang }) => {
       {/* Hero Section */}
       <section className="text-center pt-20 pb-12 md:pt-28 md:pb-16 px-6 max-w-[1300px] mx-auto relative z-10">
         <div className="animate-fade-in-up">
-            <h1 className="text-5xl md:text-8xl font-black mb-6 tracking-tighter leading-[0.95] text-transparent bg-clip-text bg-gradient-to-br from-[var(--text-main)] to-[var(--text-muted)]">
+            <h1 className="text-4xl md:text-6xl font-black mb-5 tracking-tighter leading-[0.98] text-transparent bg-clip-text bg-gradient-to-br from-[var(--text-main)] to-[var(--text-muted)]">
               {t.heroTitle}
             </h1>
-            <h2 className="text-2xl md:text-4xl font-bold mb-10 text-[var(--primary)] tracking-tight">
+            <h2 className="text-xl md:text-3xl font-bold mb-8 text-[var(--primary)] tracking-tight">
               {t.heroSubtitle}
             </h2>
         </div>
         
         <div className="opacity-0 animate-fade-in-up animate-delay-200">
-            <p className="text-lg md:text-2xl text-[var(--text-muted)] mb-14 max-w-3xl mx-auto font-light leading-relaxed">
+            <p className="text-base md:text-xl text-[var(--text-muted)] mb-12 max-w-3xl mx-auto font-light leading-relaxed">
               {t.heroDescription}
             </p>
         </div>
 
         <div className="flex justify-center gap-5 flex-wrap opacity-0 animate-fade-in-up animate-delay-300">
-          <button onClick={() => onNavigate('shop')} className="btn btn-primary text-lg px-12 py-4.5 transition-all hover:scale-105 active:scale-95 shadow-2xl shadow-indigo-500/40">
+          <button onClick={() => onNavigate('shop')} className="btn btn-primary text-base md:text-lg px-10 py-4 transition-all hover:scale-105 active:scale-95 shadow-2xl shadow-indigo-500/40">
             {t.shopNow}
           </button>
-          <button onClick={() => onNavigate('repair')} className="btn btn-outline text-lg px-12 py-4.5 transition-all hover:scale-105 active:scale-95 hover:bg-white/5 border-[var(--border)]">
+          <button onClick={() => onNavigate('repair')} className="btn btn-outline text-base md:text-lg px-10 py-4 transition-all hover:scale-105 active:scale-95 hover:bg-white/5 border-[var(--border)]">
             {t.repairService}
           </button>
         </div>
@@ -83,44 +83,44 @@ const Home: React.FC<HomeProps> = ({ onNavigate, lang }) => {
           
           {/* Card 1: Certified Pre-Owned */}
           <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: '300ms' }}>
-            <div className="card group p-10 text-center flex flex-col items-center animate-float hover:border-[var(--primary)] transition-all duration-500 h-full">
-               <div className="w-20 h-20 rounded-3xl bg-indigo-500/10 flex items-center justify-center text-[var(--primary)] mb-8 group-hover:bg-[var(--primary)] group-hover:text-white transition-all duration-700 shadow-inner">
-                  <Smartphone size={36} />
+            <div className="card group p-7 text-center flex flex-col items-center animate-float hover:border-[var(--primary)] transition-all duration-500 h-full">
+               <div className="w-16 h-16 rounded-3xl bg-indigo-500/10 flex items-center justify-center text-[var(--primary)] mb-6 group-hover:bg-[var(--primary)] group-hover:text-white transition-all duration-700 shadow-inner">
+                  <Smartphone size={28} />
                </div>
-               <h3 className="text-2xl font-black mb-4 text-[var(--text-main)] tracking-tight">Certified Pre-Owned</h3>
+               <h3 className="text-xl font-black mb-3 text-[var(--text-main)] tracking-tight">Certified Pre-Owned</h3>
                <p className="text-[var(--text-muted)] text-sm leading-relaxed">Every device undergoes a 50-point inspection and comes with a solid 90-day warranty.</p>
             </div>
           </div>
 
           {/* Card 2: Express Repair */}
           <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: '450ms' }}>
-            <div className="card group p-10 text-center flex flex-col items-center animate-float hover:border-amber-500 transition-all duration-500 h-full" style={{ animationDelay: '1s' }}>
-               <div className="w-20 h-20 rounded-3xl bg-amber-500/10 flex items-center justify-center text-amber-500 mb-8 group-hover:bg-amber-500 group-hover:text-white transition-all duration-700 shadow-inner">
-                  <Zap size={36} />
+            <div className="card group p-7 text-center flex flex-col items-center animate-float hover:border-amber-500 transition-all duration-500 h-full" style={{ animationDelay: '1s' }}>
+               <div className="w-16 h-16 rounded-3xl bg-amber-500/10 flex items-center justify-center text-amber-500 mb-6 group-hover:bg-amber-500 group-hover:text-white transition-all duration-700 shadow-inner">
+                  <Zap size={28} />
                </div>
-               <h3 className="text-2xl font-black mb-4 text-[var(--text-main)] tracking-tight">Express Repair</h3>
+               <h3 className="text-xl font-black mb-3 text-[var(--text-main)] tracking-tight">Express Repair</h3>
                <p className="text-[var(--text-muted)] text-sm leading-relaxed">Most screen and battery replacements are finished in Dessie while you wait—often under 45 mins.</p>
             </div>
           </div>
 
           {/* Card 3: Fast Delivery */}
           <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: '600ms' }}>
-            <div className="card group p-10 text-center flex flex-col items-center animate-float hover:border-emerald-500 transition-all duration-500 h-full" style={{ animationDelay: '2s' }}>
-               <div className="w-20 h-20 rounded-3xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 mb-8 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-700 shadow-inner">
-                  <Truck size={36} />
+            <div className="card group p-7 text-center flex flex-col items-center animate-float hover:border-emerald-500 transition-all duration-500 h-full" style={{ animationDelay: '2s' }}>
+               <div className="w-16 h-16 rounded-3xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 mb-6 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-700 shadow-inner">
+                  <Truck size={28} />
                </div>
-               <h3 className="text-2xl font-black mb-4 text-[var(--text-main)] tracking-tight">Fast Delivery</h3>
+               <h3 className="text-xl font-black mb-3 text-[var(--text-main)] tracking-tight">Fast Delivery</h3>
                <p className="text-[var(--text-muted)] text-sm leading-relaxed">Need it today? Order before noon and we’ll deliver anywhere in Dessie — same day.</p>
             </div>
           </div>
 
           {/* Card 4: Genuine Gear */}
           <div className="opacity-0 animate-fade-in-up" style={{ animationDelay: '750ms' }}>
-            <div className="card group p-10 text-center flex flex-col items-center animate-float hover:border-purple-500 transition-all duration-500 h-full" style={{ animationDelay: '3s' }}>
-               <div className="w-20 h-20 rounded-3xl bg-purple-500/10 flex items-center justify-center text-purple-500 mb-8 group-hover:bg-purple-500 group-hover:text-white transition-all duration-700 shadow-inner">
-                  <ShieldCheck size={36} />
+            <div className="card group p-7 text-center flex flex-col items-center animate-float hover:border-purple-500 transition-all duration-500 h-full" style={{ animationDelay: '3s' }}>
+               <div className="w-16 h-16 rounded-3xl bg-purple-500/10 flex items-center justify-center text-purple-500 mb-6 group-hover:bg-purple-500 group-hover:text-white transition-all duration-700 shadow-inner">
+                  <ShieldCheck size={28} />
                </div>
-               <h3 className="text-2xl font-black mb-4 text-[var(--text-main)] tracking-tight">Genuine Gear</h3>
+               <h3 className="text-xl font-black mb-3 text-[var(--text-main)] tracking-tight">Genuine Gear</h3>
                <p className="text-[var(--text-muted)] text-sm leading-relaxed">No knock-offs. We source 100% original components and premium accessories from global brands.</p>
             </div>
           </div>

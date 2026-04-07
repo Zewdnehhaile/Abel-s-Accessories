@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Log, Order, Product, RepairRequest, SalesStat, User } from '../../types';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Shield, Users, TrendingUp, Lock, Plus, Pencil, Trash2, UserCircle, X } from 'lucide-react';
+import { Shield, Users, Lock, Plus, Pencil, Trash2, UserCircle, X, TrendingUp, PackageSearch, Wrench, ArrowRight } from 'lucide-react';
 import { fetchLogs, fetchSalesStats, fetchUsers, toggleUserActive, createUser, updateUser, deleteUser, fetchUsageStats } from '../../services/adminService';
 import { fetchProfile, updateProfile } from '../../services/userService';
 import { fetchOrders } from '../../services/orderService';
@@ -227,6 +226,10 @@ const SuperAdminDashboard: React.FC = () => {
     () => buildDashboardNotifications({ repairs, orders, products }),
     [repairs, orders, products]
   );
+  const openSection = (id: string) => {
+    const element = document.getElementById(id);
+    element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -278,117 +281,169 @@ const SuperAdminDashboard: React.FC = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        {/* Analytics Chart */}
-        <div className="bg-dark-800 p-4 md:p-6 rounded-xl border border-dark-700 shadow-xl">
-          <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-            <TrendingUp className="text-brand-500" /> Weekly Revenue
-          </h3>
-          <div className="w-full h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={stats}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                <XAxis dataKey="date" stroke="#94a3b8" />
-                <YAxis stroke="#94a3b8" />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#fff' }}
-                  itemStyle={{ color: '#fbbf24' }}
-                />
-                <Bar dataKey="amount" fill="#f59e0b" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+        <button onClick={() => openSection('super-users')} className="bg-dark-800 p-5 rounded-xl border border-dark-700 text-left hover:border-brand-500 transition-colors">
+          <div className="flex items-center justify-between mb-3">
+            <Users className="text-blue-400" />
+            <ArrowRight size={16} className="text-gray-500" />
           </div>
-          <div className="mt-6 border-t border-dark-700 pt-4">
-            <div className="text-sm uppercase text-gray-400 tracking-widest font-bold mb-3">Weekly Breakdown</div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="text-gray-400 text-[11px] uppercase">
-                  <tr>
-                    <th className="py-2">Day</th>
-                    <th className="py-2 text-right">Revenue (ETB)</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-dark-700">
-                  {stats.map(row => (
-                    <tr key={row.date}>
-                      <td className="py-2 text-gray-300">{row.date}</td>
-                      <td className="py-2 text-right text-white font-semibold">{row.amount.toLocaleString()}</td>
-                    </tr>
-                  ))}
-                  <tr>
-                    <td className="py-2 text-gray-400 font-bold">Total</td>
-                    <td className="py-2 text-right text-white font-black">{weeklyTotal.toLocaleString()}</td>
-                  </tr>
-                </tbody>
-              </table>
+          <p className="text-sm uppercase text-gray-400 tracking-widest font-bold">Users</p>
+          <p className="text-2xl font-black text-white mt-2">{usage?.totalUsers ?? users.length}</p>
+          <p className="text-sm text-gray-500 mt-1">Manage staff and access</p>
+        </button>
+        <button onClick={() => openSection('super-sales')} className="bg-dark-800 p-5 rounded-xl border border-dark-700 text-left hover:border-amber-500 transition-colors">
+          <div className="flex items-center justify-between mb-3">
+            <TrendingUp className="text-amber-400" />
+            <ArrowRight size={16} className="text-gray-500" />
+          </div>
+          <p className="text-sm uppercase text-gray-400 tracking-widest font-bold">Sales</p>
+          <p className="text-2xl font-black text-white mt-2">{weeklyTotal.toLocaleString()} ETB</p>
+          <p className="text-sm text-gray-500 mt-1">Weekly revenue overview</p>
+        </button>
+        <button onClick={() => openSection('super-repairs')} className="bg-dark-800 p-5 rounded-xl border border-dark-700 text-left hover:border-emerald-500 transition-colors">
+          <div className="flex items-center justify-between mb-3">
+            <Wrench className="text-emerald-400" />
+            <ArrowRight size={16} className="text-gray-500" />
+          </div>
+          <p className="text-sm uppercase text-gray-400 tracking-widest font-bold">Repairs</p>
+          <p className="text-2xl font-black text-white mt-2">{repairs.length}</p>
+          <p className="text-sm text-gray-500 mt-1">Track active repair jobs</p>
+        </button>
+        <button onClick={() => openSection('super-stock')} className="bg-dark-800 p-5 rounded-xl border border-dark-700 text-left hover:border-red-500 transition-colors">
+          <div className="flex items-center justify-between mb-3">
+            <PackageSearch className="text-red-400" />
+            <ArrowRight size={16} className="text-gray-500" />
+          </div>
+          <p className="text-sm uppercase text-gray-400 tracking-widest font-bold">Low Stock</p>
+          <p className="text-2xl font-black text-white mt-2">{products.filter(p => p.stock < 10).length}</p>
+          <p className="text-sm text-gray-500 mt-1">Inventory that needs attention</p>
+        </button>
+      </div>
+
+      <div id="super-users" className="bg-dark-800 p-4 md:p-6 rounded-xl border border-dark-700 shadow-xl mb-8">
+         <div className="flex justify-between items-center mb-6">
+            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <Users className="text-blue-500" /> User Accounts
+            </h3>
+            <button onClick={openCreateUser} className="btn btn-primary btn-sm flex items-center gap-2">
+              <Plus size={14} /> Add User
+            </button>
+         </div>
+         <div className="space-y-4">
+            {users.map(u => (
+              <div key={u.id} className="flex items-center justify-between p-4 bg-dark-900 rounded-lg border border-dark-700">
+                 <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${u.role === 'super_admin' ? 'bg-red-600' : 'bg-brand-600'}`}>
+                      {u.name.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="font-medium text-white">{u.name}</p>
+                      <p className="text-sm text-gray-500">{u.email}</p>
+                    </div>
+                 </div>
+                 <div className="flex items-center gap-2">
+                   <span className="text-sm uppercase bg-dark-800 border border-dark-600 text-gray-300 px-2 py-1 rounded">
+                      {u.role.replace('_', ' ')}
+                   </span>
+                   <span className={`text-xs uppercase px-2 py-1 rounded border ${
+                      u.isActive ? 'border-emerald-500/40 text-emerald-300 bg-emerald-500/10' : 'border-red-500/40 text-red-300 bg-red-500/10'
+                   }`}>
+                      {u.isActive ? 'Active' : 'Inactive'}
+                   </span>
+                   <button
+                     onClick={() => handleToggleActive(u.id)}
+                     className={`text-xs px-2.5 py-1 rounded border ${
+                       u.role === 'super_admin' ? 'opacity-40 cursor-not-allowed' : 'border-dark-600 hover:bg-dark-700'
+                     }`}
+                     disabled={u.role === 'super_admin'}
+                   >
+                     {u.role === 'super_admin' ? 'Protected' : u.isActive ? 'Deactivate' : 'Activate'}
+                   </button>
+                   <button
+                     onClick={() => openEditUser(u)}
+                     className={`p-2 rounded-lg border ${
+                       u.role === 'super_admin' ? 'opacity-40 cursor-not-allowed border-dark-700' : 'border-dark-600 hover:bg-dark-700'
+                     }`}
+                     disabled={u.role === 'super_admin'}
+                     title="Edit user"
+                   >
+                     <Pencil size={14} className="text-blue-300" />
+                   </button>
+                   <button
+                     onClick={() => handleDeleteUser(u)}
+                     className={`p-2 rounded-lg border ${
+                       u.role === 'super_admin' ? 'opacity-40 cursor-not-allowed border-dark-700' : 'border-dark-600 hover:bg-dark-700'
+                     }`}
+                     disabled={u.role === 'super_admin'}
+                     title="Delete user"
+                   >
+                     <Trash2 size={14} className="text-red-300" />
+                   </button>
+                 </div>
+              </div>
+            ))}
+         </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div id="super-sales" className="bg-dark-800 p-4 md:p-6 rounded-xl border border-dark-700 shadow-xl">
+          <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+            <TrendingUp className="text-brand-500" /> Sales Summary
+          </h3>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between rounded-lg bg-dark-900 border border-dark-700 px-4 py-3">
+              <span className="text-gray-400 font-semibold">Weekly Revenue</span>
+              <span className="text-white font-black">{weeklyTotal.toLocaleString()} ETB</span>
+            </div>
+            <div className="flex items-center justify-between rounded-lg bg-dark-900 border border-dark-700 px-4 py-3">
+              <span className="text-gray-400 font-semibold">Total Orders</span>
+              <span className="text-white font-black">{orders.length}</span>
+            </div>
+            <div className="flex items-center justify-between rounded-lg bg-dark-900 border border-dark-700 px-4 py-3">
+              <span className="text-gray-400 font-semibold">Paid Orders Today</span>
+              <span className="text-white font-black">{orders.filter(order => order.paymentStatus === 'paid').length}</span>
             </div>
           </div>
         </div>
 
-        {/* User Management */}
-        <div className="bg-dark-800 p-4 md:p-6 rounded-xl border border-dark-700 shadow-xl">
-           <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <Users className="text-blue-500" /> User Accounts
-              </h3>
-              <button onClick={openCreateUser} className="btn btn-primary btn-sm flex items-center gap-2">
-                <Plus size={14} /> Add User
-              </button>
-           </div>
-           <div className="space-y-4">
-              {users.map(u => (
-                <div key={u.id} className="flex items-center justify-between p-4 bg-dark-900 rounded-lg border border-dark-700">
-                   <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${u.role === 'super_admin' ? 'bg-red-600' : 'bg-brand-600'}`}>
-                        {u.name.charAt(0)}
-                      </div>
-                      <div>
-                        <p className="font-medium text-white">{u.name}</p>
-                        <p className="text-sm text-gray-500">{u.email}</p>
-                      </div>
-                   </div>
-                   <div className="flex items-center gap-2">
-                     <span className="text-sm uppercase bg-dark-800 border border-dark-600 text-gray-300 px-2 py-1 rounded">
-                        {u.role.replace('_', ' ')}
-                     </span>
-                     <span className={`text-xs uppercase px-2 py-1 rounded border ${
-                        u.isActive ? 'border-emerald-500/40 text-emerald-300 bg-emerald-500/10' : 'border-red-500/40 text-red-300 bg-red-500/10'
-                     }`}>
-                        {u.isActive ? 'Active' : 'Inactive'}
-                     </span>
-                     <button
-                       onClick={() => handleToggleActive(u.id)}
-                       className={`text-xs px-2.5 py-1 rounded border ${
-                         u.role === 'super_admin' ? 'opacity-40 cursor-not-allowed' : 'border-dark-600 hover:bg-dark-700'
-                       }`}
-                       disabled={u.role === 'super_admin'}
-                     >
-                       {u.role === 'super_admin' ? 'Protected' : u.isActive ? 'Deactivate' : 'Activate'}
-                     </button>
-                     <button
-                       onClick={() => openEditUser(u)}
-                       className={`p-2 rounded-lg border ${
-                         u.role === 'super_admin' ? 'opacity-40 cursor-not-allowed border-dark-700' : 'border-dark-600 hover:bg-dark-700'
-                       }`}
-                       disabled={u.role === 'super_admin'}
-                       title="Edit user"
-                     >
-                       <Pencil size={14} className="text-blue-300" />
-                     </button>
-                     <button
-                       onClick={() => handleDeleteUser(u)}
-                       className={`p-2 rounded-lg border ${
-                         u.role === 'super_admin' ? 'opacity-40 cursor-not-allowed border-dark-700' : 'border-dark-600 hover:bg-dark-700'
-                       }`}
-                       disabled={u.role === 'super_admin'}
-                       title="Delete user"
-                     >
-                       <Trash2 size={14} className="text-red-300" />
-                     </button>
-                   </div>
+        <div id="super-repairs" className="bg-dark-800 p-4 md:p-6 rounded-xl border border-dark-700 shadow-xl">
+          <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+            <Wrench className="text-emerald-500" /> Repair Queue
+          </h3>
+          <div className="space-y-4">
+            {repairs.slice(0, 5).map(repair => (
+              <div key={repair.id} className="rounded-lg bg-dark-900 border border-dark-700 px-4 py-3 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-white font-semibold">{repair.customerName}</p>
+                  <p className="text-sm text-gray-500">{repair.deviceModel}</p>
                 </div>
-              ))}
-           </div>
+                <span className="text-xs uppercase px-2 py-1 rounded border border-emerald-500/20 text-emerald-300 bg-emerald-500/10">
+                  {repair.repairStatus}
+                </span>
+              </div>
+            ))}
+            {repairs.length === 0 && (
+              <div className="text-sm text-gray-500">No repairs yet.</div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div id="super-stock" className="bg-dark-800 p-4 md:p-6 rounded-xl border border-dark-700 shadow-xl mb-8">
+        <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+          <PackageSearch className="text-red-500" /> Inventory Watch
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {products.filter(p => p.stock < 10).slice(0, 6).map(product => (
+            <div key={product.id} className="rounded-lg bg-dark-900 border border-dark-700 p-4">
+              <p className="text-white font-semibold line-clamp-1">{product.name}</p>
+              <p className="text-sm text-gray-500 mt-1">{product.category}</p>
+              <p className="text-red-300 font-black mt-2">Stock: {product.stock}</p>
+            </div>
+          ))}
+          {products.filter(p => p.stock < 10).length === 0 && (
+            <div className="text-sm text-gray-500">No low-stock items right now.</div>
+          )}
         </div>
       </div>
 
