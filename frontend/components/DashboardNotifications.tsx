@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useRef, useState } from 'react';
+import React, { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, Bell, Package, Wrench } from 'lucide-react';
 import { DashboardNotificationItem } from '../utils/dashboardNotifications';
 
@@ -42,7 +42,37 @@ const DashboardNotifications: React.FC<DashboardNotificationsProps> = ({
   onItemClick
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [readSignatures, setReadSignatures] = useState<Record<string, string>>({});
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const storageKey = `dashboard-notifications:${buttonLabel}`;
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(storageKey);
+      if (stored) {
+        const parsed = JSON.parse(stored) as Record<string, string>;
+        if (parsed && typeof parsed === 'object') {
+          setReadSignatures(parsed);
+        }
+      }
+    } catch {
+      // ignore storage issues
+    }
+  }, [storageKey]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(readSignatures));
+    } catch {
+      // ignore storage issues
+    }
+  }, [readSignatures, storageKey]);
+
+  const itemSignature = (item: DashboardNotificationItem) => `${item.value}|${item.description}`;
+  const unreadCount = useMemo(
+    () => items.filter(item => readSignatures[item.id] !== itemSignature(item)).length,
+    [items, readSignatures]
+  );
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -82,9 +112,11 @@ const DashboardNotifications: React.FC<DashboardNotificationsProps> = ({
         }`}
       >
         <Bell size={20} />
-        <span className={`absolute -right-1 -top-1 min-w-5 px-1.5 h-5 rounded-full text-[11px] font-black leading-5 text-center ${badgeClassName}`}>
-          {items.length}
-        </span>
+        {unreadCount > 0 && (
+          <span className={`absolute -right-1 -top-1 min-w-5 px-1.5 h-5 rounded-full text-[11px] font-black leading-5 text-center ${badgeClassName}`}>
+            {unreadCount}
+          </span>
+        )}
       </button>
 
       {isOpen && (
@@ -98,8 +130,8 @@ const DashboardNotifications: React.FC<DashboardNotificationsProps> = ({
               </p>
               <h2 className="text-lg font-black tracking-tight">Live alerts</h2>
             </div>
-            <div className={`rounded-full px-3 py-1 text-xs font-black uppercase tracking-[0.25em] ${textMutedClassName} ${variant === 'dark' ? 'bg-white/5' : 'bg-[var(--bg-body)]'}`}>
-              {items.length} new
+              <div className={`rounded-full px-3 py-1 text-xs font-black uppercase tracking-[0.25em] ${textMutedClassName} ${variant === 'dark' ? 'bg-white/5' : 'bg-[var(--bg-body)]'}`}>
+              {unreadCount} unread
             </div>
           </div>
 
@@ -112,6 +144,7 @@ const DashboardNotifications: React.FC<DashboardNotificationsProps> = ({
                     key={item.id}
                     type="button"
                     onClick={() => {
+                      setReadSignatures(prev => ({ ...prev, [item.id]: itemSignature(item) }));
                       setIsOpen(false);
                       onItemClick?.(item);
                     }}
