@@ -131,7 +131,7 @@ const Shop: React.FC<ShopProps> = ({ addToCart, lang, categoryFilter }) => {
         <button
             key={ft.id}
             onClick={() => setActiveType(ft.id)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${activeType === ft.id ? 'bg-[var(--primary)] text-white shadow-lg' : 'bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-muted)] hover:text-white hover:border-[var(--primary)]'}`}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${activeType === ft.id ? 'bg-[var(--primary)] text-white shadow-lg' : 'bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-muted)] hover:text-white hover:border-[var(--primary)]'}`}
         >
             {ft.label}
         </button>
@@ -148,7 +148,7 @@ const Shop: React.FC<ShopProps> = ({ addToCart, lang, categoryFilter }) => {
         <button
             key={ft.id}
             onClick={() => setActiveType(ft.id)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${activeType === ft.id ? 'bg-[var(--primary)] text-white shadow-lg' : 'bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-muted)] hover:text-white hover:border-[var(--primary)]'}`}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${activeType === ft.id ? 'bg-[var(--primary)] text-white shadow-lg' : 'bg-[var(--bg-card)] border border-[var(--border)] text-[var(--text-muted)] hover:text-white hover:border-[var(--primary)]'}`}
         >
             {ft.label}
         </button>
@@ -157,13 +157,13 @@ const Shop: React.FC<ShopProps> = ({ addToCart, lang, categoryFilter }) => {
   };
 
   return (
-    <div className="py-9 px-[5%] max-w-[1120px] mx-auto animate-in fade-in duration-500">
+    <div className="py-8 px-[5%] max-w-[1120px] mx-auto animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row justify-between items-end mb-7 gap-5 border-b border-[var(--border)] pb-5">
         <div>
-            <h2 className="text-2xl md:text-3xl font-black text-[var(--text-main)] mb-1 tracking-tight">
+            <h2 className="text-xl md:text-2xl font-black text-[var(--text-main)] mb-1 tracking-tight">
                 {categoryFilter === 'phones' ? 'Mobile Phones' : 'Accessories'}
             </h2>
-            <p className="text-xs md:text-sm text-[var(--text-muted)]">
+            <p className="text-[11px] md:text-xs text-[var(--text-muted)]">
                 {categoryFilter === 'phones' ? 'Latest smartphones and durable button phones.' : 'Enhance your daily tech.'}
             </p>
         </div>

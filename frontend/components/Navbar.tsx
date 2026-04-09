@@ -16,14 +16,14 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout, cartCount, toggleCart, 
 
   return (
     <nav className="sticky top-0 z-40 bg-[var(--nav-bg)] backdrop-blur-xl border-b border-[var(--border)] transition-colors duration-300">
-      <div className="max-w-[1300px] mx-auto px-[5%]">
-        <div className="flex items-center justify-between h-[80px]">
+      <div className="max-w-[1180px] mx-auto px-[4%]">
+        <div className="flex items-center justify-between h-[68px] md:h-[72px]">
           {/* Logo */}
-          <button onClick={() => onNavigate('home')} className="group flex items-center gap-3 focus:outline-none">
-            <div className="relative w-10 h-10 md:w-12 md:h-12 flex-shrink-0">
+          <button onClick={() => onNavigate('home')} className="group flex items-center gap-2.5 focus:outline-none">
+            <div className="relative w-9 h-9 md:w-10 md:h-10 flex-shrink-0">
                <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 rounded-xl blur opacity-70 group-hover:opacity-100 transition-opacity duration-300 animate-pulse-slow"></div>
                <div className="relative w-full h-full bg-[var(--bg-body)] rounded-xl border border-white/10 flex items-center justify-center overflow-hidden transition-transform duration-300 group-hover:scale-105">
-                  <svg viewBox="0 0 100 100" className="w-full h-full p-1.5" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <svg viewBox="0 0 100 100" className="w-full h-full p-1" fill="none" xmlns="http://www.w3.org/2000/svg">
                      <defs>
                         <linearGradient id="logoGradient" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
                            <stop offset="0%" stopColor="#6366f1" />
@@ -42,30 +42,30 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout, cartCount, toggleCart, 
                </div>
             </div>
             <div className="flex flex-col items-start -space-y-1">
-              <span className="text-xl md:text-2xl font-black tracking-tighter text-[var(--text-main)]">
+              <span className="text-lg md:text-xl font-black tracking-tighter text-[var(--text-main)]">
                 Abel<span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--primary)] to-purple-500">Accessories</span>
               </span>
             </div>
           </button>
 
           {/* Desktop Links */}
-          <ul className="hidden md:flex items-center gap-8">
-            <li><button onClick={() => onNavigate('home')} className="text-[0.95rem] font-medium opacity-70 hover:opacity-100 hover:text-[var(--primary)] text-[var(--text-main)] transition-all">Home</button></li>
-            <li><button onClick={() => onNavigate('about')} className="text-[0.95rem] font-medium opacity-70 hover:opacity-100 hover:text-[var(--primary)] text-[var(--text-main)] transition-all">About</button></li>
-            <li><button onClick={() => onNavigate('shop', 'phones')} className="text-[0.95rem] font-medium opacity-70 hover:opacity-100 hover:text-[var(--primary)] text-[var(--text-main)] transition-all">Phones</button></li>
-            <li><button onClick={() => onNavigate('shop', 'accessories')} className="text-[0.95rem] font-medium opacity-70 hover:opacity-100 hover:text-[var(--primary)] text-[var(--text-main)] transition-all">Accessories</button></li>
-            <li><button onClick={() => onNavigate('repair')} className="text-[0.95rem] font-medium opacity-70 hover:opacity-100 hover:text-[var(--primary)] text-[var(--text-main)] transition-all">Repairs</button></li>
+          <ul className="hidden md:flex items-center gap-6">
+            <li><button onClick={() => onNavigate('home')} className="text-[0.85rem] font-medium opacity-70 hover:opacity-100 hover:text-[var(--primary)] text-[var(--text-main)] transition-all">Home</button></li>
+            <li><button onClick={() => onNavigate('about')} className="text-[0.85rem] font-medium opacity-70 hover:opacity-100 hover:text-[var(--primary)] text-[var(--text-main)] transition-all">About</button></li>
+            <li><button onClick={() => onNavigate('shop', 'phones')} className="text-[0.85rem] font-medium opacity-70 hover:opacity-100 hover:text-[var(--primary)] text-[var(--text-main)] transition-all">Phones</button></li>
+            <li><button onClick={() => onNavigate('shop', 'accessories')} className="text-[0.85rem] font-medium opacity-70 hover:opacity-100 hover:text-[var(--primary)] text-[var(--text-main)] transition-all">Accessories</button></li>
+            <li><button onClick={() => onNavigate('repair')} className="text-[0.85rem] font-medium opacity-70 hover:opacity-100 hover:text-[var(--primary)] text-[var(--text-main)] transition-all">Repairs</button></li>
           </ul>
 
           {/* Right Actions */}
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-4">
              {/* Cart Icon Button */}
              <button 
                 onClick={toggleCart}
                 className="relative text-[var(--text-main)] hover:text-[var(--primary)] transition-colors p-1"
                 title="Cart"
              >
-                <ShoppingCart size={24} />
+                <ShoppingCart size={22} />
                 {cartCount > 0 && (
                   <span className="absolute -top-1 -right-2 bg-[var(--primary)] text-white text-xs font-bold px-1.5 py-0.5 rounded-full shadow-lg border border-[var(--bg-body)]">
                     {cartCount}
@@ -74,9 +74,9 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout, cartCount, toggleCart, 
              </button>
 
              {user ? (
-               <div className="flex items-center gap-3 border-l border-[var(--border)] pl-6">
+               <div className="flex items-center gap-2.5 border-l border-[var(--border)] pl-4">
                  <div className="flex flex-col items-end">
-                    <span className="text-sm font-bold text-[var(--text-main)]">{user.name}</span>
+                    <span className="text-xs md:text-sm font-bold text-[var(--text-main)]">{user.name}</span>
                  </div>
                  {user.role !== UserRole.CUSTOMER && (
                    <button 
@@ -87,14 +87,14 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout, cartCount, toggleCart, 
                       <LayoutDashboard size={22} />
                    </button>
                  )}
-                 <button onClick={onLogout} className="text-[var(--text-muted)] hover:text-red-500 transition-colors" title="Logout">
-                   <LogOut size={22} />
+                   <button onClick={onLogout} className="text-[var(--text-muted)] hover:text-red-500 transition-colors" title="Logout">
+                   <LogOut size={20} />
                  </button>
                </div>
              ) : (
                <button 
                 onClick={() => onNavigate('login')} 
-                className="btn btn-primary btn-sm px-6 py-2.5 shadow-lg shadow-indigo-500/20"
+                className="btn btn-primary btn-sm px-4 py-2 shadow-lg shadow-indigo-500/20 text-sm"
                >
                  Sign In
                </button>
@@ -105,16 +105,16 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout, cartCount, toggleCart, 
           <div className="md:hidden flex items-center gap-4">
              <button 
                 onClick={toggleCart}
-                className="relative text-[var(--text-main)]"
+                className="relative text-[var(--text-main)] p-1"
              >
-                <ShoppingCart size={24} />
+                <ShoppingCart size={22} />
                 {cartCount > 0 && (
                   <span className="absolute -top-1 -right-2 bg-[var(--primary)] text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
                     {cartCount}
                   </span>
                 )}
              </button>
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-[var(--text-main)] p-2">
+            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-[var(--text-main)] p-1.5">
               {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
             </button>
           </div>
