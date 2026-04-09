@@ -553,49 +553,49 @@ const AbelDashboard: React.FC = () => {
 
       {activeView === 'repairs' && (
           <div className="card overflow-hidden border-[var(--border)] animate-in fade-in p-0">
-              <div className="p-5 md:p-6 border-b border-[var(--border)] flex justify-between items-center gap-3">
-                  <h3 className="text-lg md:text-xl font-bold text-[var(--text-main)]">Live Repair Queue</h3>
+              <div className="p-4 md:p-5 border-b border-[var(--border)] flex justify-between items-center gap-3">
+                  <h3 className="text-base md:text-lg font-bold text-[var(--text-main)]">Live Repair Queue</h3>
               </div>
               <div className="overflow-x-auto">
-                  <table className="w-full min-w-[860px] table-fixed text-left text-sm md:text-base">
-                      <thead className="bg-[var(--bg-body)] text-[var(--text-muted)] uppercase text-[11px] md:text-xs font-black tracking-widest">
+                  <table className="w-full min-w-[760px] table-fixed text-left text-xs md:text-sm">
+                      <thead className="bg-[var(--bg-body)] text-[var(--text-muted)] uppercase text-[10px] md:text-[11px] font-black tracking-wider">
                           <tr>
-                              <th className="px-3 md:px-4 py-4">Tracking ID</th>
-                              <th className="px-3 md:px-4 py-4">Customer</th>
-                              <th className="px-3 md:px-4 py-4">Telegram</th>
-                              <th className="px-3 md:px-4 py-4">Device</th>
-                              <th className="px-3 md:px-4 py-4">Status</th>
-                              <th className="px-3 md:px-4 py-4">Action</th>
+                              <th className="px-2.5 md:px-3 py-3">Tracking ID</th>
+                              <th className="px-2.5 md:px-3 py-3">Customer</th>
+                              <th className="px-2.5 md:px-3 py-3">Telegram</th>
+                              <th className="px-2.5 md:px-3 py-3">Device</th>
+                              <th className="px-2.5 md:px-3 py-3">Status</th>
+                              <th className="px-2.5 md:px-3 py-3">Action</th>
                           </tr>
                       </thead>
                       <tbody className="divide-y divide-[var(--border)] text-[var(--text-main)]">
                           {isLoadingRepairs ? (
                             <tr>
-                              <td colSpan={5} className="px-3 md:px-4 py-6 text-center text-[var(--text-muted)]">
+                              <td colSpan={5} className="px-2.5 md:px-3 py-5 text-center text-[var(--text-muted)]">
                                 Loading repairs...
                               </td>
                             </tr>
                           ) : repairError ? (
                             <tr>
-                              <td colSpan={5} className="px-3 md:px-4 py-6 text-center text-red-500">
+                              <td colSpan={5} className="px-2.5 md:px-3 py-5 text-center text-red-500">
                                 {repairError}
                               </td>
                             </tr>
                           ) : (
                             repairs.map(repair => (
                                 <tr key={repair.id} className="hover:bg-[var(--bg-body)] transition-colors">
-                                    <td className="px-3 md:px-4 py-4 font-mono font-bold text-[var(--primary)] break-words">{repair.trackingCode}</td>
-                                    <td className="px-3 md:px-4 py-4">
-                                        <div className="font-bold">{repair.customerName}</div>
+                                    <td className="px-2.5 md:px-3 py-3 font-mono font-bold text-[var(--primary)] break-words">{repair.trackingCode}</td>
+                                    <td className="px-2.5 md:px-3 py-3">
+                                        <div className="font-bold text-xs md:text-sm">{repair.customerName}</div>
                                         <div className="text-[11px] md:text-xs text-[var(--text-muted)]">{repair.phone}</div>
                                     </td>
-                                    <td className="px-3 md:px-4 py-4">
+                                    <td className="px-2.5 md:px-3 py-3">
                                       {repair.telegramUsername ? (
                                         <a
                                           href={`https://t.me/${repair.telegramUsername.replace(/^@/, '')}`}
                                           target="_blank"
                                           rel="noreferrer"
-                                          className="text-xs md:text-sm font-bold text-sky-500 hover:underline break-words"
+                                          className="text-[11px] md:text-xs font-bold text-sky-500 hover:underline break-words"
                                         >
                                           {repair.telegramUsername}
                                         </a>
@@ -603,12 +603,12 @@ const AbelDashboard: React.FC = () => {
                                         <span className="text-[11px] md:text-xs text-[var(--text-muted)]">Not provided</span>
                                       )}
                                     </td>
-                                    <td className="px-3 md:px-4 py-4">
-                                        <div className="font-medium">{repair.deviceModel}</div>
+                                    <td className="px-2.5 md:px-3 py-3">
+                                        <div className="font-medium text-xs md:text-sm">{repair.deviceModel}</div>
                                         <div className="text-[11px] md:text-xs text-[var(--text-muted)] truncate max-w-xs">{repair.issueDescription}</div>
                                     </td>
-                                    <td className="px-3 md:px-4 py-4">
-                                <span className={`px-2.5 py-1 rounded-full text-[11px] md:text-xs font-black uppercase tracking-tighter
+                                    <td className="px-2.5 md:px-3 py-3">
+                                <span className={`px-2 py-1 rounded-full text-[10px] md:text-[11px] font-black uppercase tracking-tighter
                                             ${repair.repairStatus === RepairStatus.COMPLETED ? 'bg-emerald-500/10 text-emerald-500' : 
                                               repair.repairStatus === RepairStatus.RECEIVED ? 'bg-orange-500/10 text-orange-500' :
                                               repair.repairStatus === RepairStatus.IN_PROGRESS ? 'bg-blue-500/10 text-blue-500' :
@@ -618,23 +618,23 @@ const AbelDashboard: React.FC = () => {
                                             {repair.repairStatus.replace('_', ' ')}
                                         </span>
                                     </td>
-                                    <td className="px-3 md:px-4 py-4">
-                                        <div className="flex flex-wrap gap-1">
+                                    <td className="px-2.5 md:px-3 py-3">
+                                        <div className="flex flex-wrap gap-0.5">
                                             {repair.telegramUsername && (
                                               <a
                                                 href={`https://t.me/${repair.telegramUsername.replace(/^@/, '')}`}
                                                 target="_blank"
                                                 rel="noreferrer"
-                                                className="p-2 hover:bg-sky-500/10 rounded-lg text-sky-500"
+                                                className="p-1.5 hover:bg-sky-500/10 rounded-lg text-sky-500"
                                                 title="Message on Telegram"
                                               >
-                                                <MessageCircle size={16} />
+                                                <MessageCircle size={14} />
                                               </a>
                                             )}
-                                            <button onClick={() => updateRepairStatus(repair.id, RepairStatus.IN_PROGRESS)} className="p-2 hover:bg-blue-500/10 rounded-lg text-blue-500" title="Work in Progress"><PenTool size={16} /></button>
-                                            <button onClick={() => updateRepairStatus(repair.id, RepairStatus.READY)} className="p-2 hover:bg-amber-500/10 rounded-lg text-amber-500" title="Ready"><Check size={16} /></button>
-                                            <button onClick={() => updateRepairStatus(repair.id, RepairStatus.COMPLETED)} className="p-2 hover:bg-emerald-500/10 rounded-lg text-emerald-500" title="Mark Done"><Check size={16} /></button>
-                                            <button onClick={() => updateRepairStatus(repair.id, RepairStatus.REJECTED)} className="p-2 hover:bg-red-500/10 rounded-lg text-red-500" title="Cancel/Reject"><X size={16} /></button>
+                                            <button onClick={() => updateRepairStatus(repair.id, RepairStatus.IN_PROGRESS)} className="p-1.5 hover:bg-blue-500/10 rounded-lg text-blue-500" title="Work in Progress"><PenTool size={14} /></button>
+                                            <button onClick={() => updateRepairStatus(repair.id, RepairStatus.READY)} className="p-1.5 hover:bg-amber-500/10 rounded-lg text-amber-500" title="Ready"><Check size={14} /></button>
+                                            <button onClick={() => updateRepairStatus(repair.id, RepairStatus.COMPLETED)} className="p-1.5 hover:bg-emerald-500/10 rounded-lg text-emerald-500" title="Mark Done"><Check size={14} /></button>
+                                            <button onClick={() => updateRepairStatus(repair.id, RepairStatus.REJECTED)} className="p-1.5 hover:bg-red-500/10 rounded-lg text-red-500" title="Cancel/Reject"><X size={14} /></button>
                                         </div>
                                     </td>
                                 </tr>
@@ -650,36 +650,36 @@ const AbelDashboard: React.FC = () => {
           <div className="space-y-6 animate-in fade-in">
               <div className="flex justify-between items-center gap-3">
                   <h2 className="text-xl md:text-2xl font-black text-[var(--text-main)] tracking-tight">Inventory Control</h2>
-                  <button onClick={openAddProduct} className="btn btn-primary px-4 md:px-5 py-3 text-sm md:text-base">
-                      <Plus size={18} /> New Product
+                  <button onClick={openAddProduct} className="btn btn-primary px-3.5 md:px-4 py-2.5 text-xs md:text-sm">
+                      <Plus size={16} /> New Product
                   </button>
               </div>
 
               <div className="card overflow-hidden border-[var(--border)] p-0">
                   <div className="overflow-x-auto">
-                      <table className="w-full min-w-[980px] table-fixed text-left text-sm md:text-base">
-                      <thead className="bg-[var(--bg-body)] text-[var(--text-muted)] uppercase text-[11px] md:text-xs font-black tracking-widest">
+                      <table className="w-full min-w-[860px] table-fixed text-left text-xs md:text-sm">
+                      <thead className="bg-[var(--bg-body)] text-[var(--text-muted)] uppercase text-[10px] md:text-[11px] font-black tracking-wider">
                               <tr>
-                                  <th className="px-3 md:px-4 py-4">Item</th>
-                                  <th className="px-3 md:px-4 py-4">Category</th>
-                                  <th className="px-3 md:px-4 py-4">Condition</th>
-                                  <th className="px-3 md:px-4 py-4">Price</th>
-                                  <th className="px-3 md:px-4 py-4">Discount</th>
-                                  <th className="px-3 md:px-4 py-4">Stock</th>
-                                  <th className="px-3 md:px-4 py-4">Status</th>
-                                  <th className="px-3 md:px-4 py-4">Actions</th>
+                                  <th className="px-2.5 md:px-3 py-3">Item</th>
+                                  <th className="px-2.5 md:px-3 py-3">Category</th>
+                                  <th className="px-2.5 md:px-3 py-3">Condition</th>
+                                  <th className="px-2.5 md:px-3 py-3">Price</th>
+                                  <th className="px-2.5 md:px-3 py-3">Discount</th>
+                                  <th className="px-2.5 md:px-3 py-3">Stock</th>
+                                  <th className="px-2.5 md:px-3 py-3">Status</th>
+                                  <th className="px-2.5 md:px-3 py-3">Actions</th>
                               </tr>
                           </thead>
                           <tbody className="divide-y divide-[var(--border)] text-[var(--text-main)]">
                               {isLoadingProducts ? (
                                 <tr>
-                                  <td colSpan={8} className="px-3 md:px-4 py-6 text-center text-[var(--text-muted)]">
+                                  <td colSpan={8} className="px-2.5 md:px-3 py-5 text-center text-[var(--text-muted)]">
                                     Loading products...
                                   </td>
                                 </tr>
                               ) : productError ? (
                                 <tr>
-                                  <td colSpan={8} className="px-3 md:px-4 py-6 text-center text-red-500">
+                                  <td colSpan={8} className="px-2.5 md:px-3 py-5 text-center text-red-500">
                                     {productError}
                                   </td>
                                 </tr>
@@ -689,9 +689,9 @@ const AbelDashboard: React.FC = () => {
                                   const hasDiscount = (product.discountPercent ?? 0) > 0;
                                   return (
                                     <tr key={product.id} className="hover:bg-[var(--bg-body)] transition-colors">
-                                        <td className="px-3 md:px-4 py-4">
-                                            <div className="flex items-center gap-3">
-                                            <div className="w-12 h-12 rounded-xl border border-[var(--border)] overflow-hidden bg-[var(--bg-body)] flex items-center justify-center shrink-0">
+                                        <td className="px-2.5 md:px-3 py-3">
+                                            <div className="flex items-center gap-2.5">
+                                            <div className="w-10 h-10 rounded-lg border border-[var(--border)] overflow-hidden bg-[var(--bg-body)] flex items-center justify-center shrink-0">
                                               {product.image && !productImageErrors[product.id] ? (
                                                 <img
                                                   src={product.image}
@@ -701,63 +701,63 @@ const AbelDashboard: React.FC = () => {
                                                   onError={() => setProductImageErrors(prev => ({ ...prev, [product.id]: true }))}
                                                 />
                                               ) : (
-                                                <ImageOff size={18} className="text-[var(--text-muted)]" />
+                                                <ImageOff size={16} className="text-[var(--text-muted)]" />
                                               )}
                                             </div>
-                                            <span className="font-bold min-w-0 line-clamp-2">{product.name}</span>
+                                            <span className="font-bold text-xs md:text-sm min-w-0 line-clamp-2">{product.name}</span>
                                             </div>
                                         </td>
-                                        <td className="px-3 md:px-4 py-4 text-[var(--text-muted)] font-medium">{product.category}</td>
-                                        <td className="px-3 md:px-4 py-4">
+                                        <td className="px-2.5 md:px-3 py-3 text-[var(--text-muted)] font-medium">{product.category}</td>
+                                        <td className="px-2.5 md:px-3 py-3">
                                           {product.condition === 'new' ? (
                                               <span className="text-emerald-500 font-black text-xs px-2 py-0.5 bg-emerald-500/10 rounded-full uppercase">New</span>
                                           ) : (
                                               <span className="text-amber-500 font-black text-xs px-2 py-0.5 bg-amber-500/10 rounded-full uppercase">Used</span>
                                           )}
                                         </td>
-                                        <td className="px-3 md:px-4 py-4">
-                                          <div className="font-black text-sm md:text-lg">{finalPrice.toLocaleString()} ETB</div>
+                                        <td className="px-2.5 md:px-3 py-3">
+                                          <div className="font-black text-xs md:text-sm">{finalPrice.toLocaleString()} ETB</div>
                                           {hasDiscount && (
-                                            <div className="text-xs text-[var(--text-muted)] line-through">
+                                            <div className="text-[10px] md:text-xs text-[var(--text-muted)] line-through">
                                               {product.price.toLocaleString()} ETB
                                             </div>
                                           )}
                                         </td>
-                                        <td className="px-3 md:px-4 py-4">
+                                        <td className="px-2.5 md:px-3 py-3">
                                           {hasDiscount ? (
-                                            <span className="text-emerald-500 font-black text-xs px-2 py-0.5 bg-emerald-500/10 rounded-full uppercase">
+                                            <span className="text-emerald-500 font-black text-[10px] md:text-xs px-2 py-0.5 bg-emerald-500/10 rounded-full uppercase">
                                               -{product.discountPercent}%
                                             </span>
                                           ) : (
-                                            <span className="text-[var(--text-muted)] text-xs">—</span>
+                                            <span className="text-[var(--text-muted)] text-[10px] md:text-xs">—</span>
                                           )}
                                         </td>
-                                        <td className="px-3 md:px-4 py-4">
-                                          <div className="flex items-center gap-2">
+                                        <td className="px-2.5 md:px-3 py-3">
+                                          <div className="flex items-center gap-1.5 text-[11px] md:text-xs">
                                               <span className={`w-2 h-2 rounded-full ${product.stock < 10 ? 'bg-red-500 animate-pulse' : 'bg-emerald-500'}`}></span>
                                               {product.stock} units
                                           </div>
                                         </td>
-                                        <td className="px-3 md:px-4 py-4">
-                                            <span className={`px-3 py-1 rounded-full text-xs font-black uppercase ${product.stock > 0 ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>
+                                        <td className="px-2.5 md:px-3 py-3">
+                                            <span className={`px-2 py-1 rounded-full text-[10px] md:text-xs font-black uppercase ${product.stock > 0 ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>
                                                 {product.stock > 0 ? 'Available' : 'Sold Out'}
                                             </span>
                                         </td>
-                                        <td className="px-3 md:px-4 py-4">
-                                          <div className="flex items-center gap-2">
+                                        <td className="px-2.5 md:px-3 py-3">
+                                          <div className="flex items-center gap-1">
                                             <button
                                               onClick={() => handleEditProduct(product)}
-                                              className="p-2 rounded-lg text-blue-400 hover:bg-blue-500/10"
+                                              className="p-1.5 rounded-lg text-blue-400 hover:bg-blue-500/10"
                                               title="Edit"
                                             >
-                                              <Pencil size={15} />
+                                              <Pencil size={14} />
                                             </button>
                                             <button
                                               onClick={() => handleDeleteProduct(product)}
-                                              className="p-2 rounded-lg text-red-500 hover:bg-red-500/10"
+                                              className="p-1.5 rounded-lg text-red-500 hover:bg-red-500/10"
                                               title="Delete"
                                             >
-                                              <Trash2 size={15} />
+                                              <Trash2 size={14} />
                                             </button>
                                           </div>
                                         </td>
