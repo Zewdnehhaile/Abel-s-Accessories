@@ -157,7 +157,7 @@ const Shop: React.FC<ShopProps> = ({ addToCart, lang, categoryFilter }) => {
   };
 
   return (
-    <div className="py-8 px-[5%] max-w-[1120px] mx-auto animate-in fade-in duration-500">
+    <div className="py-8 px-4 md:px-6 max-w-[1480px] mx-auto animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row justify-between items-end mb-7 gap-5 border-b border-[var(--border)] pb-5">
         <div>
             <h2 className="text-xl md:text-2xl font-black text-[var(--text-main)] mb-1 tracking-tight">
@@ -214,20 +214,20 @@ const Shop: React.FC<ShopProps> = ({ addToCart, lang, categoryFilter }) => {
               Limited Offers
             </span>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 min-[1440px]:grid-cols-5 gap-4">
             {discountedProducts.map(product => {
               const finalPrice = getDiscountedPrice(product);
               const hasDiscount = (product.discountPercent ?? 0) > 0;
               const isOutOfStock = product.stock <= 0 || product.status === 'out_of_stock';
               const isLowStock = product.stock > 0 && product.stock <= 5;
               return (
-                <div key={`discount-${product.id}`} className="card group flex flex-col justify-between overflow-hidden p-0 border-0 bg-[var(--bg-card)] ring-1 ring-[var(--border)] hover:ring-[var(--primary)] transition-all aspect-square min-h-[22rem]">
-                  <div className="h-[52%] relative overflow-hidden bg-[#0F1014] flex items-center justify-center">
+                <div key={`discount-${product.id}`} className="group flex h-full min-h-[24rem] flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-card)] ring-1 ring-[var(--border)] transition-all duration-200 hover:-translate-y-1 hover:ring-[var(--primary)]">
+                  <div className="relative flex h-[60%] items-center justify-center overflow-hidden bg-[#11131A] px-3 py-4">
                       {!imageErrors[product.id] ? (
                         <img 
                             src={product.image} 
                             alt={product.name} 
-                            className="w-full h-full object-contain p-2 md:p-3 transition-transform duration-700 group-hover:scale-105" 
+                            className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105" 
                             onError={() => setImageErrors(prev => ({...prev, [product.id]: true}))}
                         />
                       ) : (
@@ -248,10 +248,10 @@ const Shop: React.FC<ShopProps> = ({ addToCart, lang, categoryFilter }) => {
                       </div>
                   </div>
 
-                  <div className="p-3 md:p-4 flex flex-col flex-1 min-h-0">
-                      <div className="space-y-1.5">
-                          <h3 className="font-bold text-sm md:text-base text-[var(--text-main)] line-clamp-2">{product.name}</h3>
-                          <p className="text-[var(--text-muted)] text-[11px] md:text-xs line-clamp-2 min-h-[2.25rem] md:min-h-[2.5rem]">{product.description}</p>
+                  <div className="flex flex-1 flex-col p-3 md:p-4 min-h-0">
+                      <div className="space-y-1">
+                          <h3 className="font-bold text-sm md:text-[15px] text-[var(--text-main)] leading-snug line-clamp-2">{product.name}</h3>
+                          <p className="text-[var(--text-muted)] text-[11px] md:text-xs leading-snug line-clamp-1 min-h-[1.1rem]">{product.description}</p>
                           <div className="flex flex-wrap items-center gap-2 text-[11px] md:text-xs font-bold">
                             <span className={`${isOutOfStock ? 'text-red-500' : 'text-emerald-500'}`}>
                               {isOutOfStock ? 'Out of stock' : `${product.stock} in stock`}
@@ -261,22 +261,20 @@ const Shop: React.FC<ShopProps> = ({ addToCart, lang, categoryFilter }) => {
                             )}
                           </div>
                       </div>
-                      <div className="mt-auto pt-3 border-t border-[var(--border)] space-y-3">
+                      <div className="mt-auto pt-3 border-t border-[var(--border)] space-y-2">
                           <div className="flex items-baseline justify-between gap-2">
                             <div className="flex flex-col">
-                              <span className="text-sm md:text-base font-bold text-[var(--text-main)]">{finalPrice.toLocaleString()} ETB</span>
+                              <span className="text-sm md:text-[15px] font-bold text-[var(--text-main)]">{finalPrice.toLocaleString()} ETB</span>
                               <span className="text-[11px] text-[var(--text-muted)] line-through">{product.price.toLocaleString()} ETB</span>
                             </div>
                           </div>
                           <button 
                               onClick={() => addToCart(product)}
                               disabled={isOutOfStock}
-                              className="btn btn-primary btn-sm w-full px-4 py-2 justify-center transition-all duration-200 text-xs"
+                              className="btn btn-primary btn-sm w-full justify-center gap-2 px-4 py-2.5 transition-all duration-200 text-xs font-semibold"
                           >
                               <ShoppingCart size={16} />
-                              <span>
-                                Add to cart
-                              </span>
+                              <span>Add to cart</span>
                           </button>
                       </div>
                   </div>
@@ -288,20 +286,20 @@ const Shop: React.FC<ShopProps> = ({ addToCart, lang, categoryFilter }) => {
       )}
 
       {!isLoading && !loadError && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 min-[1440px]:grid-cols-5 gap-4">
         {regularProducts.map(product => {
           const finalPrice = getDiscountedPrice(product);
           const hasDiscount = (product.discountPercent ?? 0) > 0;
           const isOutOfStock = product.stock <= 0 || product.status === 'out_of_stock';
           const isLowStock = product.stock > 0 && product.stock <= 5;
           return (
-          <div key={product.id} className="card group flex flex-col justify-between overflow-hidden p-0 border-0 bg-[var(--bg-card)] ring-1 ring-[var(--border)] hover:ring-[var(--primary)] transition-all aspect-square min-h-[22rem]">
-            <div className="h-[52%] relative overflow-hidden bg-[#0F1014] flex items-center justify-center">
+          <div key={product.id} className="group flex h-full min-h-[24rem] flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-card)] ring-1 ring-[var(--border)] transition-all duration-200 hover:-translate-y-1 hover:ring-[var(--primary)]">
+            <div className="relative flex h-[60%] items-center justify-center overflow-hidden bg-[#11131A] px-3 py-4">
                 {!imageErrors[product.id] ? (
                   <img 
                       src={product.image} 
                       alt={product.name} 
-                      className="w-full h-full object-contain p-2 md:p-3 transition-transform duration-700 group-hover:scale-105" 
+                      className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105" 
                       onError={() => setImageErrors(prev => ({...prev, [product.id]: true}))}
                   />
                 ) : (
@@ -322,10 +320,10 @@ const Shop: React.FC<ShopProps> = ({ addToCart, lang, categoryFilter }) => {
                 </div>
             </div>
 
-            <div className="p-3 md:p-4 flex flex-col flex-1 min-h-0">
-                <div className="space-y-1.5">
-                    <h3 className="font-bold text-sm md:text-base text-[var(--text-main)] line-clamp-2">{product.name}</h3>
-                    <p className="text-[var(--text-muted)] text-[11px] md:text-xs line-clamp-2 min-h-[2.25rem] md:min-h-[2.5rem]">{product.description}</p>
+            <div className="flex flex-1 flex-col p-3 md:p-4 min-h-0">
+                <div className="space-y-1">
+                    <h3 className="font-bold text-sm md:text-[15px] text-[var(--text-main)] leading-snug line-clamp-2">{product.name}</h3>
+                    <p className="text-[var(--text-muted)] text-[11px] md:text-xs leading-snug line-clamp-1 min-h-[1.1rem]">{product.description}</p>
                     <div className="flex flex-wrap items-center gap-2 text-[11px] md:text-xs font-bold">
                       <span className={`${isOutOfStock ? 'text-red-500' : 'text-emerald-500'}`}>
                         {isOutOfStock ? 'Out of stock' : `${product.stock} in stock`}
@@ -335,10 +333,10 @@ const Shop: React.FC<ShopProps> = ({ addToCart, lang, categoryFilter }) => {
                       )}
                     </div>
                 </div>
-                <div className="mt-auto pt-3 border-t border-[var(--border)] space-y-3">
+                <div className="mt-auto pt-3 border-t border-[var(--border)] space-y-2">
                     <div className="flex items-baseline justify-between gap-2">
                       <div className="flex flex-col">
-                        <span className="text-sm md:text-base font-bold text-[var(--text-main)]">{finalPrice.toLocaleString()} ETB</span>
+                        <span className="text-sm md:text-[15px] font-bold text-[var(--text-main)]">{finalPrice.toLocaleString()} ETB</span>
                         {hasDiscount && (
                           <span className="text-[11px] text-[var(--text-muted)] line-through">{product.price.toLocaleString()} ETB</span>
                         )}
@@ -347,7 +345,7 @@ const Shop: React.FC<ShopProps> = ({ addToCart, lang, categoryFilter }) => {
                     <button 
                         onClick={() => addToCart(product)}
                         disabled={isOutOfStock}
-                        className="btn btn-primary btn-sm w-full px-4 py-2 justify-center transition-all duration-200 text-xs"
+                        className="btn btn-primary btn-sm w-full justify-center gap-2 px-4 py-2.5 transition-all duration-200 text-xs font-semibold"
                     >
                         <ShoppingCart size={16} />
                         <span>Add to cart</span>
